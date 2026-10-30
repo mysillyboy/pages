@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三个页面 · 公开分享</title>
+<meta name="description" content="微信读书阅读看板、国产汽车品牌关系图、中国历史年表幻灯片——三个独立页面的入口。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316181D'/%3E%3Cpath d='M26 34h48M26 50h48M26 66h30' stroke='%23F4F1E9' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#F4F1E9;
+    --card:#FFFDF8;
+    --ink:#16181D;
+    --muted:#7C828C;
+    --line:#E9E4D8;
+    --accent:#9a3b2e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;flex-direction:column;
+  }
+  .wrap{width:100%;max-width:980px;margin:0 auto;padding:56px 26px 40px;flex:1}
+  .eyebrow{font-size:11px;letter-spacing:.32em;color:#b5ae9e;text-transform:uppercase}
+  h1{margin:16px 0 0;font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:.04em}
+  .sub{margin:12px 0 0;color:var(--muted);font-size:14px;line-height:1.7}
+  .rule{height:1px;background:var(--line);margin:34px 0 30px}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(268px,1fr))}
+  a.card{
+    display:flex;flex-direction:column;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:24px 22px 20px;text-decoration:none;color:inherit;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    box-shadow:0 1px 0 rgba(22,24,29,.02);
+  }
+  a.card:hover{transform:translateY(-3px);border-color:#dcd5c4;box-shadow:0 14px 30px -20px rgba(22,24,29,.45)}
+  .no{font-size:11px;letter-spacing:.22em;color:#c3bcab;font-weight:600}
+  .t{font-size:17px;font-weight:700;letter-spacing:.01em;line-height:1.4}
+  .d{font-size:13px;color:var(--muted);line-height:1.65;flex:1}
+  .go{margin-top:6px;font-size:12.5px;color:var(--accent);font-weight:600;letter-spacing:.04em}
+  .go span{display:inline-block;transition:transform .18s ease}
+  a.card:hover .go span{transform:translateX(4px)}
+  footer{border-top:1px solid var(--line);margin-top:44px;padding:18px 0 26px;color:#b5ae9e;font-size:12px;line-height:1.8}
+  @media (max-width:520px){ .wrap{padding:38px 18px 30px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Shared Pages</div>
+  <h1>三个页面</h1>
+  <p class="sub">三个独立的静态页面，点开即可阅读。适配手机与桌面，无需登录。</p>
+
+  <div class="rule"></div>
+
+  <div class="grid">
+    <a class="card" href="weread-dashboard.html">
+      <div class="no">01</div>
+      <div class="t">微信读书 · 阅读看板</div>
+      <div class="d">年度与月度阅读时长、日均趋势、书目与笔记统计。数据可视化，支持切换维度。</div>
+      <div class="go">打开页面 <span>→</span></div>
+    </a>
+
+    <a class="card" href="国产汽车品牌关系图.html">
+      <div class="no">02</div>
+      <div class="t">国产汽车品牌关系图</div>
+      <div class="d">谁是谁的子品牌：按集团梳理比亚迪、吉利、长安、奇瑞、长城等品牌谱系。</div>
+      <div class="go">打开页面 <span>→</span></div>
+    </a>
+
+    <a class="card" href="中国历代王朝·幻灯片.html">
+      <div class="no">03</div>
+      <div class="t">中国历史年表 · 幻灯片</div>
+      <div class="d">从夏商到清代的朝代更迭，以幻灯片形式逐页浏览，附关键年代与跨度。</div>
+      <div class="go">打开页面 <span>→</span></div>
+    </a>
+  </div>
+
+  <footer>
+    纯静态页面，无后端、无追踪脚本。若页面显示异常，请尝试刷新或更换浏览器。
+  </footer>
+</div>
+</body>
+</html>

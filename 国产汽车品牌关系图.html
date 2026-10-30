@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>国产汽车品牌关系图 · 谁是谁的子品牌</title>
+<meta name="description" content="一张图理清中国主要汽车集团与旗下品牌、合资品牌、华为合作品牌的关系。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E%F0%9F%9A%97%3C/text%3E%3C/svg%3E">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-size:15px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  :root{
+    --bg:#f3f4f6;
+    --ink:#15171c;
+    --sub:#5f6672;
+    --muted:#8a909a;
+    --line:#e5e7eb;
+    --line-2:#eef0f2;
+    --radius:16px;
+    --wrap:1240px;
+  }
+  .container{width:min(var(--wrap),calc(100% - 48px));margin:0 auto}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    overflow:hidden;
+    color:#fff;
+    padding:54px 0 26px;
+    background:
+      radial-gradient(900px 380px at 12% -20%, #333a48 0%, rgba(20,22,27,0) 60%),
+      radial-gradient(700px 320px at 92% 0%, #2c2136 0%, rgba(20,22,27,0) 55%),
+      #14161b;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size:48px 48px;
+    -webkit-mask-image:linear-gradient(to bottom, #000 0%, transparent 82%);
+    mask-image:linear-gradient(to bottom, #000 0%, transparent 82%);
+    pointer-events:none;
+  }
+  .hero .container{position:relative;z-index:1}
+  .topline{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .kicker{
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:#8f97a6;font-weight:600;
+  }
+  .kicker i{display:inline-block;width:22px;height:1px;background:#e8452c;vertical-align:middle;margin-right:10px}
+  .stamp{
+    font-size:12px;color:#aab2c0;border:1px solid rgba(255,255,255,.14);
+    padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.04);
+  }
+  h1{
+    font-size:clamp(28px,4.4vw,44px);
+    line-height:1.18;
+    letter-spacing:-.02em;
+    margin:16px 0 12px;
+    font-weight:800;
+  }
+  h1 .thin{color:#8d95a5;font-weight:600}
+  .sub{
+    max-width:720px;margin:0;color:#b9c0cc;font-size:15.5px;
+  }
+  .sub strong{color:#fff;font-weight:600}
+
+  .stats{display:flex;flex-wrap:wrap;gap:14px 40px;margin:30px 0 26px}
+  .stat b{display:block;font-size:27px;font-weight:800;letter-spacing:-.03em;line-height:1.2}
+  .stat b em{font-style:normal;font-size:13px;font-weight:600;color:#9aa3b2;margin-left:3px}
+  .stat span{font-size:12px;color:#9aa3b2;letter-spacing:.02em}
+
+  .legend{
+    display:flex;flex-wrap:wrap;gap:10px 22px;
+    padding-top:16px;border-top:1px solid rgba(255,255,255,.09);
+    font-size:12.5px;color:#b9c0cc;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .sw.own{background:#e4e7ec}
+  .sw.jv{background:transparent;border:1px dashed #9aa3b2}
+  .sw.hw{background:linear-gradient(135deg,#c4b5fd,#a5b4fc)}
+  .sw.dead{background:#4b5058}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:30;
+    background:rgba(243,244,246,.88);
+    -webkit-backdrop-filter:saturate(180%) blur(12px);
+    backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .tb-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 0}
+  .tabs{display:flex;gap:4px;flex-wrap:wrap}
+  .tab{
+    appearance:none;border:0;background:transparent;cursor:pointer;
+    font-family:inherit;font-size:13.5px;color:#525a66;font-weight:500;
+    padding:7px 13px;border-radius:9px;transition:background .16s,color .16s;
+    white-space:nowrap;
+  }
+  .tab:hover{background:#e9ebef;color:#1b1e24}
+  .tab.active{background:#17191f;color:#fff}
+  .tab .num{font-size:11px;opacity:.55;margin-left:4px}
+
+  .search{position:relative;flex:0 1 300px;min-width:200px}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#9aa0aa}
+  .search input{
+    width:100%;height:36px;border:1px solid var(--line);background:#fff;
+    border-radius:10px;padding:0 34px 0 33px;font-size:13.5px;font-family:inherit;color:var(--ink);
+    outline:none;transition:border-color .16s,box-shadow .16s;
+  }
+  .search input::placeholder{color:#a9aeb7}
+  .search input:focus{border-color:#b9c0cc;box-shadow:0 0 0 3px rgba(23,25,31,.06)}
+  .search kbd{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    font-family:inherit;font-size:11px;color:#9aa0aa;border:1px solid var(--line);
+    border-radius:5px;padding:1px 5px;background:#fafafa;pointer-events:none;
+  }
+
+  /* ---------- Grid ---------- */
+  main{padding:26px 0 64px}
+  .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+  .rowlabel{
+    grid-column:1/-1;
+    display:flex;align-items:center;gap:12px;
+    margin:10px 2px 0;
+    font-size:12.5px;font-weight:600;letter-spacing:.12em;color:#7c828d;
+  }
+  .rowlabel::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#dfe2e6,transparent)}
+  .rowlabel .cnt{
+    letter-spacing:0;font-weight:500;color:#a2a7b0;
+    border:1px solid #e2e4e8;background:#fff;border-radius:999px;padding:1px 8px;font-size:11px;
+  }
+
+  .card{
+    grid-column:span 6;
+    position:relative;
+    background:var(--card,#fff);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:19px 19px 15px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    animation:rise .4s ease both;
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:19px;right:19px;height:3px;
+    border-radius:0 0 3px 3px;background:var(--accent);opacity:.85;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(16,24,40,.09);border-color:#dcdfe4}
+  .card[data-cat="央企"]{--accent:#b42318;--tint:#fef3f2}
+  .card[data-cat="地方国企"]{--accent:#1d4ed8;--tint:#eef4ff}
+  .card[data-cat="民营"]{--accent:#047857;--tint:#ecfdf5}
+  .card[data-cat="新势力"]{--accent:#6d28d9;--tint:#f5f3ff}
+
+  .g-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .mark{
+    flex:0 0 38px;width:38px;height:38px;border-radius:11px;
+    display:grid;place-items:center;
+    background:var(--tint);color:var(--accent);
+    font-weight:800;font-size:17px;letter-spacing:-.02em;
+  }
+  .g-title{min-width:0;flex:1}
+  .g-title h3{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+  .g-title p{margin:1px 0 0;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge{
+    flex:0 0 auto;font-size:11px;font-weight:600;line-height:1;
+    padding:5px 8px;border-radius:999px;
+    color:var(--accent);background:var(--tint);
+  }
+
+  .brands{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:13px;line-height:1.3;padding:6px 11px;border-radius:8px;
+    background:#f3f4f6;color:#2a2e35;border:1px solid transparent;
+    white-space:nowrap;transition:transform .12s,box-shadow .12s;
+  }
+  .chip:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(16,24,40,.08)}
+  .chip.jv{background:#fff;border:1px dashed #c7ccd4;color:#4a505a}
+  .chip.hw{
+    background:linear-gradient(135deg,#f6f1ff,#eef3ff);
+    border:1px solid #ded1ff;color:#5b21b6;font-weight:600;
+  }
+  .chip.dead{background:#f7f7f8;border:1px dashed #e2e3e6;color:#a5a9b0}
+  .g-note{
+    margin:14px 0 0;padding-top:11px;border-top:1px dashed var(--line-2);
+    font-size:12.5px;line-height:1.65;color:#6d747f;
+  }
+  .card.compact{grid-column:span 4;padding:17px 17px 14px}
+  .card.compact .g-note{font-size:12px}
+
+  /* ---------- Huawei panel ---------- */
+  .hw-panel{
+    margin-top:26px;
+    border:1px solid #e7e2f6;
+    border-radius:20px;
+    padding:24px;
+    background:
+      radial-gradient(600px 200px at 100% 0%, #f3edff 0%, rgba(255,255,255,0) 70%),
+      #fff;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .hw-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+  .hw-logo{
+    flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+    background:#17191f;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;
+  }
+  .hw-head h3{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .hw-head p{margin:2px 0 0;font-size:12.5px;color:var(--muted);max-width:760px}
+  .hw-head .mode{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .tag-mode{font-size:11px;padding:4px 9px;border-radius:999px;background:#f4efff;color:#6d28d9;font-weight:600}
+  .tag-mode.blue{background:#eef4ff;color:#1d4ed8}
+
+  .hw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px}
+  .hw-tile{
+    position:relative;border:1px solid #eee9f8;background:#fff;border-radius:12px;
+    padding:13px 13px 11px;transition:transform .16s,box-shadow .16s,border-color .16s;
+  }
+  .hw-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(76,29,149,.09);border-color:#ddd0f7}
+  .hw-tile .b{font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .hw-tile .b small{font-size:10.5px;font-weight:500;color:#a2a7b0;margin-left:5px;letter-spacing:.02em}
+  .hw-tile .c{font-size:12px;color:#6d747f;margin-top:3px}
+  .hw-tile .m{
+    display:inline-block;margin-bottom:7px;font-size:9.5px;line-height:1;
+    padding:3px 6px;border-radius:999px;background:#f4efff;color:#7c3aed;
+  }
+  .hw-tile .m.blue{background:#eef4ff;color:#1d4ed8}
+  .hw-foot{margin:16px 0 0;font-size:12px;color:#8a909a;line-height:1.7}
+
+  /* ---------- Misc ---------- */
+  .empty{
+    display:none;text-align:center;padding:64px 20px;color:var(--muted);
+    border:1px dashed #d9dce1;border-radius:16px;background:#fff;font-size:14px;
+  }
+  .empty b{display:block;color:#3a3f47;font-size:15px;margin-bottom:4px}
+  footer{
+    border-top:1px solid var(--line);
+    padding:26px 0 44px;
+    font-size:12px;color:#8a909a;line-height:1.8;
+  }
+  footer b{color:#5f6672;font-weight:600}
+  .fnote{display:flex;gap:28px;flex-wrap:wrap;justify-content:space-between}
+
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto}
+  }
+
+  @media (max-width:1080px){
+    .card.compact{grid-column:span 6}
+  }
+  @media (max-width:860px){
+    .card,.card.compact{grid-column:span 12}
+    .hero{padding:38px 0 22px}
+    .stats{gap:12px 26px;margin:24px 0 22px}
+    .stat b{font-size:23px}
+    .tb-inner{padding:10px 0}
+    .search{flex:1 1 100%}
+    .search kbd{display:none}
+    main{padding:18px 0 48px}
+  }
+  @media (max-width:520px){
+    .container{width:calc(100% - 28px)}
+    .legend{gap:8px 14px;font-size:11.5px}
+    .hw-panel{padding:18px}
+    .g-title p{white-space:normal}
+  }
+
+  @media print{
+    .toolbar,.search{display:none}
+    body{background:#fff}
+    .card{break-inside:avoid;box-shadow:none}
+    .hero{background:#fff;color:#000}
+    .hero::after{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="topline">
+      <div class="kicker"><i></i>CHINA AUTO · BRAND MAP</div>
+      <div class="stamp">整理至 2026.10</div>
+    </div>
+    <h1>国产汽车品牌关系图<span class="thin">，谁是谁的子品牌</span></h1>
+    <p class="sub">同一个车标背后，可能站着央企、地方国企、民营企业，也可能是合资公司或华为的“朋友圈”。这里把主要中国车企的 <strong>集团 → 品牌</strong> 关系理成一张图。</p>
+
+    <div class="stats">
+      <div class="stat"><b id="s-group">—</b><span>汽车集团</span></div>
+      <div class="stat"><b id="s-owned">—</b><span>国有集团</span></div>
+      <div class="stat"><b id="s-private">—</b><span>民营集团</span></div>
+      <div class="stat"><b id="s-brand">—<em>个</em></b><span>在售/在产品牌</span></div>
+    </div>
+
+    <div class="legend">
+      <span><i class="sw own"></i>自主 / 控股品牌</span>
+      <span><i class="sw jv"></i>合资品牌（外资参与）</span>
+      <span><i class="sw hw"></i>华为深度合作</span>
+      <span><i class="sw dead"></i>已停产 / 并入 / 退出</span>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="container tb-inner">
+    <div class="tabs" id="tabs" role="tablist">
+      <button class="tab active" data-cat="全部" role="tab" aria-selected="true">全部</button>
+      <button class="tab" data-cat="央企" role="tab">央企</button>
+      <button class="tab" data-cat="地方国企" role="tab">地方国企</button>
+      <button class="tab" data-cat="民营" role="tab">民营</button>
+      <button class="tab" data-cat="新势力" role="tab">新势力</button>
+      <button class="tab" data-cat="华为" role="tab">华为圈</button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input id="q" type="search" placeholder="搜索品牌或集团，如 极氪 / 上汽" autocomplete="off" aria-label="搜索品牌或集团">
+      <kbd>/</kbd>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="container">
+    <noscript><p style="padding:14px 16px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;color:#5f6672">这个页面用 JavaScript 渲染品牌数据，请开启 JavaScript 后刷新。</p></noscript>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty"><b>没有找到匹配的品牌</b>换个关键词，或点击“全部”查看完整关系图。</div>
+
+    <section class="hw-panel" id="hwPanel">
+      <div class="hw-head">
+        <div class="hw-logo">华为</div>
+        <div>
+          <h3>华为：不造车，但“朋友圈”最大</h3>
+          <p>华为明确“不造车”，通过鸿蒙座舱、乾崑智驾、渠道与品牌能力深度参与造车。目前形成两条线：智选车模式的“五界”，以及乾崑深度共创的“二境”。</p>
+        </div>
+        <div class="mode">
+          <span class="tag-mode">鸿蒙智行 · 五界</span>
+          <span class="tag-mode blue">华为乾崑 · 二境</span>
+        </div>
+      </div>
+      <div class="hw-grid" id="hwGrid"></div>
+      <p class="hw-foot">此外，阿维塔（长安）、岚图与猛士（东风）、深蓝（长安）、极狐（北汽）等也搭载华为乾崑方案，但未纳入“界 / 境”品牌序列——同样是“含华量”很高的车型。</p>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="container fnote">
+    <div>
+      <b>说明：</b>仅收录主要乘用车品牌，未含陕汽、中国重汽、宇通等商用车品牌，也未含改装与专用车品牌。<br>
+      股权结构与品牌归属处于动态变化中，本图用于快速建立认知，不构成投资依据。
+    </div>
+    <div style="text-align:right">共 <b id="f-brand">—</b> 个品牌<br>整理至 2026 年 10 月</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var GROUPS = [
+    {
+      name:"中国一汽", mark:"一", en:"FAW Group", loc:"吉林 · 长春", cat:"央企",
+      note:"“共和国长子”。红旗是唯一的豪华自主线，奔腾主打性价比；利润仍高度依赖一汽-大众与一汽丰田。",
+      brands:[
+        {n:"红旗", t:"own", d:"豪华自主"},
+        {n:"奔腾", t:"own", d:"性价比乘用车"},
+        {n:"解放", t:"own", d:"商用车"},
+        {n:"一汽-大众", t:"jv", d:"大众、奥迪在华合资"},
+        {n:"一汽丰田", t:"jv"},
+        {n:"一汽马自达", t:"dead", d:"2021 年并入长安马自达"}
+      ]
+    },
+    {
+      name:"东风汽车", mark:"东", en:"Dongfeng Motor", loc:"湖北 · 武汉", cat:"央企",
+      note:"合资板块是销量与利润基盘；岚图、猛士承担品牌向上。问界母公司赛力斯脱胎于东风小康，如今已独立。",
+      brands:[
+        {n:"岚图", t:"own", d:"高端新能源"},
+        {n:"猛士", t:"own", d:"豪华越野"},
+        {n:"东风风神", t:"own"},
+        {n:"东风奕派", t:"own", d:"主流新能源"},
+        {n:"东风纳米", t:"own", d:"小型纯电"},
+        {n:"东风风行", t:"own", d:"东风柳汽"},
+        {n:"奕境", t:"hw", d:"与华为乾崑共创"},
+        {n:"东风日产", t:"jv"},
+        {n:"东风本田", t:"jv"},
+        {n:"神龙汽车", t:"jv", d:"标致、雪铁龙"}
+      ]
+    },
+    {
+      name:"中国长安", mark:"长", en:"Changan Automobile", loc:"重庆", cat:"央企",
+      note:"2025 年从兵装集团分立、升格为央企；阿维塔是“长安 + 宁德时代 + 华为”的三方合作样板，深蓝主打年轻化。",
+      brands:[
+        {n:"长安", t:"own", d:"引力 / UN 系列"},
+        {n:"长安启源", t:"own", d:"数智新能源"},
+        {n:"深蓝", t:"own", d:"年轻科技"},
+        {n:"阿维塔", t:"own", d:"三方合作高端"},
+        {n:"长安凯程", t:"own", d:"商用车"},
+        {n:"长安欧尚", t:"own", d:"已并入长安"},
+        {n:"长安福特", t:"jv"},
+        {n:"长安马自达", t:"jv", d:"含原一汽马自达"},
+        {n:"长安铃木", t:"dead", d:"2018 年退出"}
+      ]
+    },
+    {
+      name:"上汽集团", mark:"上", en:"SAIC Motor", loc:"上海", cat:"地方国企",
+      note:"合资板块是利润奶牛，自主冲高靠智己；五菱、宝骏主攻下沉市场与出口；尚界是鸿蒙智行第五界。",
+      brands:[
+        {n:"荣威", t:"own"},
+        {n:"名爵 MG", t:"own", d:"出口主力"},
+        {n:"智己", t:"own", d:"高端纯电"},
+        {n:"飞凡", t:"own", d:"已并入荣威"},
+        {n:"上汽大通", t:"own", d:"MAXUS 商乘"},
+        {n:"尚界", t:"hw", d:"与华为合作"},
+        {n:"上汽大众", t:"jv", d:"含斯柯达"},
+        {n:"上汽通用", t:"jv", d:"别克 / 雪佛兰 / 凯迪拉克"},
+        {n:"上汽奥迪", t:"jv"},
+        {n:"五菱", t:"jv", d:"上汽通用五菱"},
+        {n:"宝骏", t:"jv", d:"上汽通用五菱"}
+      ]
+    },
+    {
+      name:"广汽集团", mark:"广", en:"GAC Group", loc:"广东 · 广州", cat:"地方国企",
+      note:"合资依赖度较高，自主靠埃安走量、昊铂冲高；启境是华为乾崑“境”系列的首个品牌。",
+      brands:[
+        {n:"广汽传祺", t:"own"},
+        {n:"埃安 AION", t:"own", d:"新能源主力"},
+        {n:"昊铂", t:"own", d:"Hyper 高端"},
+        {n:"启境", t:"hw", d:"与华为乾崑共创"},
+        {n:"广汽本田", t:"jv"},
+        {n:"广汽丰田", t:"jv"},
+        {n:"广汽三菱", t:"dead", d:"2023 年退出"},
+        {n:"合创", t:"dead", d:"广汽 + 蔚来，已停摆"}
+      ]
+    },
+    {
+      name:"北汽集团", mark:"北", en:"BAIC Group", loc:"北京", cat:"地方国企",
+      note:"北京奔驰贡献主要利润；极狐与享界承担新能源向上；212 等越野车已随北汽制造剥离至魏桥。",
+      brands:[
+        {n:"北京汽车", t:"own", d:"北京品牌 / 越野"},
+        {n:"极狐", t:"own", d:"ARCFOX"},
+        {n:"享界", t:"hw", d:"与华为合作"},
+        {n:"北京奔驰", t:"jv"},
+        {n:"北京现代", t:"jv"},
+        {n:"北汽制造", t:"dead", d:"已剥离至魏桥"}
+      ]
+    },
+    {
+      name:"奇瑞控股", mark:"奇", en:"Chery Group", loc:"安徽 · 芜湖", cat:"地方国企",
+      note:"出口量长期居中国品牌第一；多品牌覆盖 5–20 万主流市场；2025 年在港交所上市。",
+      brands:[
+        {n:"奇瑞", t:"own"},
+        {n:"星途", t:"own", d:"高端线"},
+        {n:"捷途", t:"own", d:"旅行 + 越野"},
+        {n:"iCAR", t:"own", d:"年轻纯电"},
+        {n:"凯翼", t:"own"},
+        {n:"开瑞", t:"own", d:"商用车"},
+        {n:"智界", t:"hw", d:"与华为合作"},
+        {n:"奇瑞捷豹路虎", t:"jv"}
+      ]
+    },
+    {
+      name:"江淮汽车", mark:"江", en:"JAC Motors", loc:"安徽 · 合肥", cat:"地方国企",
+      note:"尊界切入百万级豪华市场；大众安徽由大众控股；为蔚来代工的合作已于 2023 年底结束。",
+      brands:[
+        {n:"江淮 JAC", t:"own"},
+        {n:"瑞风", t:"own", d:"MPV"},
+        {n:"思皓", t:"own"},
+        {n:"钇为", t:"own", d:"新能源"},
+        {n:"尊界", t:"hw", d:"与华为合作，百万级"},
+        {n:"大众安徽", t:"jv", d:"大众持股 75%"}
+      ]
+    },
+    {
+      name:"华晨集团", mark:"华", en:"Brilliance Auto", loc:"辽宁 · 沈阳", cat:"地方国企",
+      note:"经历破产重整，自主板块大幅收缩；华晨宝马是唯一优质资产，宝马已实现控股（75%）。",
+      brands:[
+        {n:"金杯", t:"own", d:"商用车"},
+        {n:"华晨宝马", t:"jv", d:"宝马持股 75%"},
+        {n:"中华", t:"dead", d:"基本停产"},
+        {n:"华晨雷诺", t:"dead", d:"已退出"}
+      ]
+    },
+    {
+      name:"比亚迪", mark:"比", en:"BYD Company", loc:"广东 · 深圳", cat:"民营",
+      note:"唯一掌握电池、电机、电控、芯片全栈的车企；2022 年起停产燃油车；腾势、方程豹、仰望组成 30 万至百万级矩阵。",
+      brands:[
+        {n:"比亚迪", t:"own", d:"王朝 / 海洋"},
+        {n:"腾势", t:"own", d:"比亚迪持股 90%"},
+        {n:"方程豹", t:"own", d:"个性化"},
+        {n:"仰望", t:"own", d:"百万级"},
+        {n:"比亚迪商用车", t:"own"},
+        {n:"比亚迪丰田", t:"jv", d:"BTET 技术合资"}
+      ]
+    },
+    {
+      name:"吉利控股", mark:"吉", en:"Geely Holding", loc:"浙江 · 杭州", cat:"民营",
+      note:"品牌矩阵最庞大，通过并购构建全球版图：沃尔沃、路特斯为控股，宝腾、smart 为合资或参股；极氪已并入吉利汽车。",
+      brands:[
+        {n:"吉利汽车", t:"own"},
+        {n:"吉利银河", t:"own", d:"主流新能源"},
+        {n:"领克", t:"own", d:"吉利 + 沃尔沃"},
+        {n:"极氪", t:"own", d:"已并入吉利汽车"},
+        {n:"睿蓝", t:"own", d:"换电"},
+        {n:"雷达", t:"own", d:"皮卡"},
+        {n:"沃尔沃", t:"own", d:"Volvo"},
+        {n:"极星", t:"own", d:"Polestar"},
+        {n:"路特斯", t:"own", d:"Lotus"},
+        {n:"smart", t:"own", d:"吉利 + 奔驰"},
+        {n:"宝腾", t:"own", d:"Proton，马来西亚"},
+        {n:"翼真", t:"own", d:"LEVC"},
+        {n:"极越", t:"dead", d:"吉利 + 百度，已停摆"}
+      ]
+    },
+    {
+      name:"长城汽车", mark:"城", en:"GWM", loc:"河北 · 保定", cat:"民营",
+      note:"聚焦 SUV、皮卡与越野，品类品牌策略清晰；坦克在硬派越野市场占据主导，光束汽车与宝马合资生产 MINI。",
+      brands:[
+        {n:"哈弗", t:"own", d:"SUV 主力"},
+        {n:"魏牌", t:"own", d:"WEY 高端"},
+        {n:"坦克", t:"own", d:"硬派越野"},
+        {n:"欧拉", t:"own", d:"女性纯电"},
+        {n:"长城炮", t:"own", d:"皮卡"},
+        {n:"光束汽车", t:"jv", d:"与宝马合资"},
+        {n:"沙龙", t:"dead", d:"已并入魏牌"}
+      ]
+    },
+    {
+      name:"赛力斯", mark:"赛", en:"Seres Group", loc:"重庆", cat:"民营",
+      note:"前身为东风小康；问界是鸿蒙智行最成功的样本；2024 年出资 115 亿元入股华为引望。",
+      brands:[
+        {n:"赛力斯", t:"own"},
+        {n:"蓝电", t:"own", d:"性价比新能源"},
+        {n:"瑞驰", t:"own", d:"商用车"},
+        {n:"问界", t:"hw", d:"AITO，鸿蒙智行"}
+      ]
+    },
+    {
+      name:"蔚来", mark:"蔚", en:"NIO", loc:"上海", cat:"新势力",
+      note:"换电体系是护城河；江淮代工结束后自建工厂；三个品牌覆盖 10–80 万价格带。",
+      brands:[
+        {n:"蔚来", t:"own"},
+        {n:"乐道", t:"own", d:"Onvo，家庭市场"},
+        {n:"萤火虫", t:"own", d:"Firefly，小车"}
+      ]
+    },
+    {
+      name:"小鹏汽车", mark:"鹏", en:"XPeng", loc:"广东 · 广州", cat:"新势力",
+      note:"智驾与飞行汽车标签鲜明；MONA M03 把高阶智驾下探到 15 万级。",
+      brands:[
+        {n:"小鹏", t:"own"},
+        {n:"MONA", t:"own", d:"子系列"}
+      ]
+    },
+    {
+      name:"理想汽车", mark:"理", en:"Li Auto", loc:"北京", cat:"新势力",
+      note:"增程 + 纯电双路线，聚焦家庭用户；单品牌、多车型的产品策略。",
+      brands:[
+        {n:"理想", t:"own", d:"L 系列 / MEGA"}
+      ]
+    },
+    {
+      name:"零跑汽车", mark:"零", en:"Leapmotor", loc:"浙江 · 杭州", cat:"新势力",
+      note:"全域自研降本；Stellantis 入股并负责海外销售，是“反向合资”的代表。",
+      brands:[
+        {n:"零跑", t:"own", d:"A / B / C / T 系列"}
+      ]
+    },
+    {
+      name:"小米汽车", mark:"米", en:"Xiaomi EV", loc:"北京", cat:"新势力",
+      note:"2024 年首车交付，手机生态跨界的代表；自带流量与渠道，是近年最强新入局者。",
+      brands:[
+        {n:"小米", t:"own", d:"SU7 / YU7"}
+      ]
+    },
+    {
+      name:"折戟与停摆", mark:"停", en:"Game Over", loc:"—", cat:"新势力",
+      note:"资本退潮后，缺乏自我造血能力的品牌率先出局。新能源淘汰赛已进入下半场，品牌数量仍在快速收敛。",
+      brands:[
+        {n:"哪吒", t:"dead", d:"合众新能源，2025 年破产重整"},
+        {n:"高合", t:"dead", d:"华人运通，2024 年起停摆"},
+        {n:"恒驰", t:"dead", d:"恒大汽车"},
+        {n:"自游家", t:"dead", d:"2022 年停摆"},
+        {n:"众泰", t:"dead", d:"已停产"}
+      ]
+    }
+  ];
+
+  var HW = [
+    {n:"问界", e:"AITO", c:"赛力斯", m:"鸿蒙智行"},
+    {n:"智界", e:"Luxeed", c:"奇瑞", m:"鸿蒙智行"},
+    {n:"享界", e:"Stelato", c:"北汽", m:"鸿蒙智行"},
+    {n:"尊界", e:"Maextro", c:"江淮", m:"鸿蒙智行"},
+    {n:"尚界", e:"Shangjie", c:"上汽", m:"鸿蒙智行"},
+    {n:"启境", e:"", c:"广汽", m:"华为乾崑"},
+    {n:"奕境", e:"", c:"东风", m:"华为乾崑"}
+  ];
+
+  var SECTIONS = [
+    {label:"国有大集团 · 央企与地方国企", cats:["央企","地方国企"]},
+    {label:"民营车企", cats:["民营"]},
+    {label:"造车新势力", cats:["新势力"]}
+  ];
+
+  var grid = document.getElementById("grid");
+  var hwGrid = document.getElementById("hwGrid");
+  var hwPanel = document.getElementById("hwPanel");
+  var empty = document.getElementById("empty");
+  var input = document.getElementById("q");
+  var tabs = document.getElementById("tabs");
+  var activeCat = "全部";
+
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function chipHTML(b){
+    var t = b.t || "own";
+    return '<span class="chip ' + t + '" data-name="' + esc(b.n) + '" data-d="' + esc(b.d || "") +
+           '" title="' + esc(b.d || b.n) + '">' + esc(b.n) + "</span>";
+  }
+
+  function cardHTML(g){
+    var compact = g.cat === "新势力" ? " compact" : "";
+    return '<article class="card' + compact + '" data-cat="' + esc(g.cat) + '" data-name="' + esc(g.name) + '">' +
+      '<div class="g-head">' +
+        '<span class="mark">' + esc(g.mark) + "</span>" +
+        '<div class="g-title"><h3>' + esc(g.name) + "</h3><p>" +
+          esc(g.en) + (g.loc && g.loc !== "—" ? " · " + esc(g.loc) : "") +
+        "</p></div>" +
+        '<span class="badge">' + esc(g.cat) + "</span>" +
+      "</div>" +
+      '<div class="brands">' + g.brands.map(chipHTML).join("") + "</div>" +
+      (g.note ? '<p class="g-note">' + esc(g.note) + "</p>" : "") +
+    "</article>";
+  }
+
+  // render group cards
+  var html = "";
+  SECTIONS.forEach(function(sec){
+    var items = GROUPS.filter(function(g){ return sec.cats.indexOf(g.cat) > -1; });
+    html += '<div class="rowlabel">' + esc(sec.label) + '<span class="cnt">' + items.length + "</span></div>";
+    html += items.map(cardHTML).join("");
+  });
+  grid.innerHTML = html;
+
+  // render huawei tiles
+  hwGrid.innerHTML = HW.map(function(x){
+    return '<div class="hw-tile" data-name="' + esc(x.n) + " " + esc(x.e) + '" data-car="' + esc(x.c) + '">' +
+      '<span class="m' + (x.m === "华为乾崑" ? " blue" : "") + '">' + esc(x.m) + "</span>" +
+      '<div class="b">' + esc(x.n) + (x.e ? "<small>" + esc(x.e) + "</small>" : "") + "</div>" +
+      '<div class="c">' + esc(x.c) + "</div>" +
+    "</div>";
+  }).join("");
+
+  // stats
+  var brandCount = GROUPS.reduce(function(sum, g){
+    return sum + g.brands.filter(function(b){ return b.t !== "dead"; }).length;
+  }, 0);
+  var owned = GROUPS.filter(function(g){ return g.cat === "央企" || g.cat === "地方国企"; }).length;
+  var priv = GROUPS.filter(function(g){ return g.cat === "民营"; }).length;
+  var groupCount = GROUPS.length - 1; // 排除“折戟与停摆”这一分类卡
+
+  document.getElementById("s-group").textContent = groupCount;
+  document.getElementById("s-owned").textContent = owned;
+  document.getElementById("s-private").textContent = priv;
+  document.getElementById("s-brand").innerHTML = brandCount + "<em>个</em>";
+  document.getElementById("f-brand").textContent = brandCount;
+
+  function apply(){
+    var q = input.value.trim().toLowerCase();
+    var showAll = activeCat === "全部";
+    var visibleCards = 0;
+
+    Array.prototype.forEach.call(document.querySelectorAll(".card"), function(card){
+      var catOK;
+      if (showAll) catOK = true;
+      else if (activeCat === "华为") catOK = false;
+      else catOK = card.getAttribute("data-cat") === activeCat;
+
+      var groupMatch = q && card.getAttribute("data-name").toLowerCase().indexOf(q) > -1;
+      var hits = 0;
+
+      Array.prototype.forEach.call(card.querySelectorAll(".chip"), function(chip){
+        var text = (chip.getAttribute("data-name") + " " + chip.getAttribute("data-d")).toLowerCase();
+        var hit = !q || groupMatch || text.indexOf(q) > -1;
+        chip.style.display = hit ? "" : "none";
+        if (hit) hits++;
+      });
+
+      var show = catOK && hits > 0;
+      card.style.display = show ? "" : "none";
+      if (show) visibleCards++;
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".rowlabel"), function(el){
+      el.style.display = (showAll && !q) ? "" : "none";
+    });
+
+    var hwOK = showAll || activeCat === "华为";
+    var hwHits = 0;
+    Array.prototype.forEach.call(document.querySelectorAll(".hw-tile"), function(tile){
+      var text = (tile.getAttribute("data-name") + " " + tile.getAttribute("data-car")).toLowerCase();
+      var hit = !q || text.indexOf(q) > -1;
+      tile.style.display = hit ? "" : "none";
+      if (hit && hwOK) hwHits++;
+    });
+
+    hwPanel.style.display = (hwOK && hwHits > 0) ? "" : "none";
+    empty.style.display = (visibleCards === 0 && hwHits === 0) ? "block" : "none";
+  }
+
+  tabs.addEventListener("click", function(e){
+    var btn = e.target.closest(".tab");
+    if (!btn) return;
+    activeCat = btn.getAttribute("data-cat");
+    Array.prototype.forEach.call(tabs.querySelectorAll(".tab"), function(t){
+      var on = t === btn;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    apply();
+  });
+
+  input.addEventListener("input", apply);
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "/" && document.activeElement !== input){
+      e.preventDefault();
+      input.focus();
+      input.select();
+    }
+    if (e.key === "Escape" && document.activeElement === input){
+      input.value = "";
+      input.blur();
+      apply();
+    }
+  });
+
+  apply();
+})();
+</script>
+</body>
+</html>
