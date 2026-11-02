@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<meta name="build" content="2026-11-02T16:23:17+0800">
+<meta name="build" content="2026-11-02T16:35:05+0800">
 <title>微信读书 · 阅读看板</title>
 <style>
   :root {
@@ -25,13 +25,6 @@
   }
   .wrap { max-width: 1180px; margin: 0 auto; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 22px; flex-wrap: wrap; }
-  .tabs { display: inline-flex; background: #FFFFFFB0; border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 2px; }
-  .tab { font: inherit; font-size: 12.5px; color: #5B616B; background: transparent; border: 0; border-radius: 999px; padding: 7px 15px; cursor: pointer; transition: .18s; }
-  .tab:hover { color: var(--ink); }
-  .tab.on { background: #fff; color: var(--ink); box-shadow: 0 3px 10px -6px rgba(30,40,60,.55); font-weight: 600; }
-  .tab .tnum { margin-left: 5px; font-size: 10.5px; color: #A6ABB3; font-variant-numeric: tabular-nums; }
-  .tab.on .tnum { color: var(--blue); }
-  .view.hidden { display: none; }
   .title { font-size: 30px; font-weight: 750; letter-spacing: -0.02em; margin: 0; }
   .title em { font-style: normal; color: var(--blue); }
   .subtitle { margin-top: 7px; color: var(--muted); font-size: 12.5px; letter-spacing: 0.02em; }
@@ -108,36 +101,13 @@
   footer { margin-top: 16px; font-size: 11px; color: #9A9FA8; display: flex; justify-content: space-between; gap: 16px; }
   footer .src { display: flex; align-items: center; gap: 6px; }
   .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); display: inline-block; }
-
-  /* highlights */
-  .notes-head { display: flex; align-items: baseline; gap: 10px; margin: 4px 0 16px; flex-wrap: wrap; }
-  .notes-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
-  .notes-head span { font-size: 11.5px; color: var(--muted); }
-  .notes { column-count: 2; column-gap: 16px; }
-  .hl { break-inside: avoid; margin: 0 0 16px; padding: 16px 18px 13px; border-radius: 14px;
-        background: var(--tint); border: 1px solid rgba(22,24,29,.05); border-left: 3px solid var(--accent);
-        transition: transform .16s ease, box-shadow .16s ease; }
-  .hl:hover { transform: translateY(-2px); box-shadow: 0 14px 26px -22px rgba(22,24,29,.55); }
-  .hl blockquote { margin: 0; font-size: 14.5px; line-height: 1.85; color: #2A2E35; letter-spacing: .01em; }
-  .hl figcaption { display: flex; align-items: baseline; gap: 0; margin-top: 12px; padding-top: 9px;
-        border-top: 1px dashed rgba(22,24,29,.10); min-width: 0; }
-  .hl figcaption b { font-size: 12px; font-weight: 650; white-space: nowrap; overflow: hidden;
-        text-overflow: ellipsis; max-width: 62%; }
-  .hl figcaption span { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden;
-        text-overflow: ellipsis; }
-  .hl figcaption span::before { content: "·"; margin: 0 5px; color: #BFC4CB; }
-  @media (max-width: 900px) { .notes { column-count: 1; } }
-  @media (max-width: 640px) { header { align-items: flex-start; } .notes-head span { width: 100%; } }
+  @media (max-width: 640px) { header { align-items: flex-start; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1 class="title">微信读书 · <em>阅读看板</em></h1>
-    <nav class="tabs" role="tablist">
-      <button class="tab on" data-view="board" role="tab">阅读看板</button>
-      <button class="tab" data-view="notes" role="tab">最近划线<span class="tnum">30</span></button>
-    </nav>
   </header>
 
   <div class="view" id="view-board">
@@ -352,34 +322,10 @@
   </section>
   </div>
 
-  <div class="view hidden" id="view-notes">
-    <div class="notes-head">
-      <h2>最近 30 条划线</h2>
-      <span>按划线时间倒序 · 来自 3 本书 · 2023-03 – 2023-07</span>
-    </div>
-    <div class="notes"><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>盖洛普幸福感调查</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>日渐盛行的奢靡之风可以归因于人们具有向上比较的倾向：我们在攀登成功和财富的阶梯时，通常将自己与水平相当或者之上的同辈相比较，而不与比我们差的人相比。</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>正如那个有关两个徒步旅行者遭遇狗熊的笑话描述的那样。一个徒步旅行者从他的背包中拿出一双运动鞋，另一个问：“为什么要穿上运动鞋？你不可能比一只熊跑得还快！”“我不需要比那只熊跑得快，”第一个人回答说，“我只要跑得比你快就够了。”</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>我们大部分的生活是以社会比较(social comparison)为中心的</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>内在价值观能够提高个体和社会的幸福感，并有助于人们抵制物质主义的价值观</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>人们还会表现出“系统公正”倾向，即倾向于信任所处文化中的事物并认为其合理，因而不愿意改变熟悉的现状，尤其是当现状比较舒适之时</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>在很多生活领域中，我们的局部体验会歪曲我们对全局的判断</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>进化使得我们的大脑更关注当前情况，而非那些看不见摸不着的数据和遥不可及的危险(Gifford,2011)。</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>这就是行为中的群体极化——当今社会科学中最惊人的发现之一：思想相同的人组成的群体容易走极端。</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#7C5CFF;--tint:rgba(124,92,255,0.055)"><blockquote>面对一个“连续队列”，目击者会把队列中的每个人与自己记忆中的罪犯逐一比较，然后做出一个确切的决定，不管匹配与否</blockquote><figcaption><b>社会心理学（第11版）</b><span>[美]戴维·迈尔斯</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>在没有设计标准的情况下进行工作是不好的，但是教条地遵守设计标准，而不顾你适当的需求就可能会更糟。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>不管什么时候，系统都应该给用户提供能正确使用系统的信息（无论是用户出现了错误还是刚刚开始使用</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>界面设计要做的全部事情就是选择正确的界面元素。这些界面元素要能帮助用户完成他们的任务，还要通过适当的方式让它们容易被理解和使用。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>“使用用户的语言”并且“保持一致性”是非常重要的。我们把用来强调一致性的工具称为受控词典（controlled vocabulary）。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>成功的用户体验，就是能事先预知用户的期望并将其纳入设计之中。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>这样的负担（让用户自己使用所有的属性来排序，并且挑选什么是重要的）不应该丢给用户，应该由我们来解决。战略告诉我们“用户的需求是什么”，范围则告诉我们“什么样的信息将满足那些用户需求”。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>我们所面临的困难不是创建一个结构，而是在创建一个能与“我们的目标”和“用户需求”相对应的、正确的结构。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>结构质量最重要的标准，不是“整个过程一共需要多少步骤”，而是“用户是否认为每一个步骤都是合理的”，以及“当前的步骤是否自然地延续了上一个步骤中的任务”。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>信息架构研究的是人们如何认知信息的过程，对于产品而言，信息架构关注的就是呈现给用户的信息是否合理并具有意义。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#2F6BFF;--tint:rgba(47,107,255,0.055)"><blockquote>第二个避免错误的方法就是使错误难以发生。</blockquote><figcaption><b>用户体验要素：以用户为中心的产品设计（原书第2版）</b><span>(美) Jesse James Garrett 著</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>在行为设计中，你要帮助人们做他们已经想做的事情，而螃蟹和贝壳根本就不想加入步行挑战，只有海豚和海龟想参加，因此你应该先去帮助海豚和海龟。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>当你能保持行为微小化并帮助他人感受成功时，好的改变是很容易实现的。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>在改变群体行为方面，主要有3种方法：·　设计改变自身行为，从而让自己远离群体的负面影响；·　与其他人一起设计改变你们的集体行为；·　为他人设计一个对他们有利的改变，就像迈克为克里斯所做的那样。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>福格原则1，帮助人们做他们已经想做的事；·　福格原则2，帮助人们感受成功。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>你或许有迟到的坏习惯，也或许有拖延的坏习惯，这些都是比较特殊的情况，因为这些坏习惯是由你没有做出的行为而形成的。在处理疏忽型或规避型习惯问题时，你要做的是让行为发生，而不是让行为停止。对于这些类型的坏习惯，经验丰富的微习惯实践者会专注于阶段1，不断地循环创建新习惯，直到问题得到解决为止。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>这就和你去买新鞋子的过程一样，你试穿的第一双鞋摆在货架上时看起来不错，但你穿上时却不太合脚。不要试图硬塞，也别怪自己的脚长得不好或是干脆不买了。事实上，你只要重新再找一双鞋试穿就行了。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>排除障碍指南：如果你会忘记执行新习惯，那么你可以反复演练几次替换和庆祝的过程，在脑海中想象也可以，以强化旧提示和新习惯之间的联结。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>重新映射提示以替换习惯重新映射提示意味着在得到提示时执行新习惯而不是旧习惯</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>匹配黄金行为的3个标准：·　这个行为可以实现愿望（影响）；·　你想做出这个行为（动机）；·　你可以做到这个行为（能力）。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure><figure class="hl" style="--accent:#0E8EA8;--tint:rgba(14,142,168,0.055)"><blockquote>在替换习惯行为时，需要善用习惯培养技巧，找到一个相比于旧习惯更容易执行、动机更强的新习惯。</blockquote><figcaption><b>福格行为模型：你会越来越有能量</b><span>B.J.福格</span></figcaption></figure></div>
-  </div>
-
   <footer>
     <div class="src"><span class="dot"></span>微信读书 Agent API · readdata / shelf / notebooks · 分类按本数统计</div>
     <div>生成于 2026-11-02 · 时长口径为接口 totalReadTime</div>
   </footer>
 </div>
-<script>
-  (function () {
-    var tabs = document.querySelectorAll('.tab');
-    tabs.forEach(function (t) {
-      t.addEventListener('click', function () {
-        tabs.forEach(function (x) { x.classList.toggle('on', x === t); });
-        document.querySelectorAll('.view').forEach(function (v) { v.classList.add('hidden'); });
-        var target = document.getElementById('view-' + t.dataset.view);
-        if (target) { target.classList.remove('hidden'); }
-        if (history.replaceState) { history.replaceState(null, '', '#' + t.dataset.view); }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    });
-    if (location.hash === '#notes') { document.querySelector('.tab[data-view="notes"]').click(); }
-  })();
-</script>
 </body>
 </html>
