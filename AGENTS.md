@@ -1,4 +1,4 @@
-﻿# 项目规则 · GitHub Pages 静态站
+# 项目规则 · GitHub Pages 静态站
 
 本目录是 <https://github.com/mysillyboy/pages> 的本地克隆。站点通过 **GitHub Pages 从 `main` 分支根目录直接发布**，没有构建步骤、没有后端。
 
@@ -70,6 +70,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .dev/publish.ps1 -Message "�
 .dev/wait-pages.mjs    publish.ps1 用来等待线上更新的辅助脚本
 .dev/geo-build.py      生成 data/geo-*.js（高程瓦片 + OSM 河流 + 省界），需要 numpy/Pillow 与联网
 .dev/geo-china-map.py  生成 data/china-map.js（全国平面总图：省界 + 河流 + 地名）
+README.md              新电脑上手、数据生成与发布流程的完整说明（给人看）
 index.html             站点首页（五个页面的入口卡片）
 weread-dashboard.html  微信读书阅读看板
 国产汽车品牌关系图.html
