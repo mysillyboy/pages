@@ -1,0 +1,1665 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>中国地势 3D · 山河立体图</title>
+<meta name="description" content="基于真实高程与河道数据的三维地势图，可在关中·中原·山西与江南·江淮之间切换，用于历史地理学习。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316181D'/%3E%3Cpath d='M14 72l22-30 16 20 14-26 20 36z' fill='%23F4F1E9'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#f4f0e6;
+    --paper-2:#ece5d5;
+    --card:rgba(255,253,247,.86);
+    --ink:#211d18;
+    --muted:#7a7263;
+    --line:rgba(33,29,24,.12);
+    --accent:#9a3b2e;
+    --accent-2:#3f6480;
+    --serif:"Songti SC","Noto Serif CJK SC","Source Han Serif SC",STSong,SimSun,serif;
+    --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{
+    background:
+      radial-gradient(120% 90% at 52% 18%, #fdfaf3 0%, #f4efe3 45%, #e9e1cf 100%);
+    color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  #gl.dragging{cursor:grabbing}
+  .vignette{
+    position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(75% 62% at 50% 46%, rgba(0,0,0,0) 55%, rgba(90,74,48,.10) 100%);
+    mix-blend-mode:multiply;
+  }
+  /* ---------- 通用面板 ---------- */
+  .glass{
+    background:var(--card);
+    -webkit-backdrop-filter:blur(10px) saturate(1.1);
+    backdrop-filter:blur(10px) saturate(1.1);
+    border:1px solid rgba(33,29,24,.10);
+    border-radius:14px;
+    box-shadow:0 18px 40px -30px rgba(40,30,15,.7), 0 1px 0 rgba(255,255,255,.6) inset;
+  }
+  /* ---------- 标题 ---------- */
+  .brand{position:fixed;left:26px;top:22px;pointer-events:none;user-select:none;z-index:3}
+  .brand:before{content:"";position:absolute;left:-52px;top:-38px;width:500px;height:180px;z-index:-1;background:radial-gradient(56% 60% at 32% 44%,rgba(250,246,236,.98) 0%,rgba(250,246,236,.88) 42%,rgba(250,246,236,.45) 68%,rgba(250,246,236,0) 100%);}
+  .brand .eyebrow{font-size:10px;letter-spacing:.34em;color:#a89a80;font-weight:600}
+  .brand h1{
+    font-family:var(--serif);font-weight:700;
+    margin:8px 0 0;font-size:clamp(21px,2.4vw,30px);letter-spacing:.06em;
+    text-shadow:0 1px 0 rgba(255,253,247,.75),0 0 16px rgba(250,246,236,.85);
+  }
+  .brand p{margin:6px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:.08em}
+  .regsel{
+    margin-top:13px;pointer-events:auto;font:inherit;font-size:12.5px;letter-spacing:.04em;
+    color:var(--ink);padding:7px 30px 7px 11px;border-radius:9px;cursor:pointer;
+    border:1px solid rgba(33,29,24,.16);background:rgba(255,253,247,.92);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236d6455' stroke-width='1.4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;
+  }
+  .regsel:hover{border-color:rgba(33,29,24,.3)}
+  /* ---------- 左上工具 ---------- */
+  .tools{position:fixed;right:20px;top:20px;display:flex;gap:8px}
+  .tbtn{
+    font:inherit;font-size:12.5px;color:var(--ink);
+    padding:9px 14px;border-radius:11px;cursor:pointer;
+    background:var(--card);border:1px solid rgba(33,29,24,.10);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    box-shadow:0 10px 24px -22px rgba(40,30,15,.8);
+    transition:background .18s,border-color .18s,transform .18s;
+  }
+  .tbtn:hover{background:#fffdf7;border-color:rgba(33,29,24,.2);transform:translateY(-1px)}
+  .tbtn.on{background:var(--ink);color:#f7f2e6;border-color:var(--ink)}
+  /* ---------- 左下控制面板 ---------- */
+  .panel{
+    position:fixed;left:20px;bottom:20px;width:266px;
+    padding:14px 15px 13px;z-index:6;
+  }
+  .legend{margin:0 0 12px}
+  .legend .bar{
+    height:9px;border-radius:5px;border:1px solid rgba(33,29,24,.12);
+    background:linear-gradient(90deg,#93ab84,#b9c093 15%,#d0c79c 30%,#d8bb87 45%,#c3955f 58%,#a3744f 72%,#835f4a 84%,#8f837a 92%,#d8d4cc 100%);
+  }
+  .legend .ticks{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:#8d8271;letter-spacing:.02em}
+  .ctr{margin:9px 0 2px}
+  .ctr .lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em}
+  .ctr .lab b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:16px;background:transparent;margin:0;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:rgba(33,29,24,.16)}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#fffdf7;
+    border:1.5px solid var(--ink);margin-top:-5px;box-shadow:0 1px 3px rgba(0,0,0,.18);
+  }
+  input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:rgba(33,29,24,.16)}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:1.5px solid var(--ink);border-radius:50%;background:#fffdf7}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+  .chip{
+    font:inherit;font-size:11.5px;padding:5px 9px;border-radius:8px;cursor:pointer;
+    border:1px solid rgba(33,29,24,.14);background:rgba(255,253,247,.5);color:#5d5648;
+    transition:all .16s;letter-spacing:.03em;
+  }
+  .chip:hover{border-color:rgba(33,29,24,.3)}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#f7f2e6}
+  .chip.k-riv.on{background:#3f6480;border-color:#3f6480}
+  .chip.k-war.on{background:var(--accent);border-color:var(--accent)}
+  .views{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;padding-top:11px;border-top:1px solid var(--line)}
+  .views .chip{flex:1 0 auto;text-align:center;padding:6px 8px;font-size:11px}
+  /* ---------- 右下读数 ---------- */
+  .hud{
+    position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+    pointer-events:none;z-index:5;
+  }
+  .readout{
+    font-size:11.5px;color:#5f5749;letter-spacing:.04em;padding:8px 12px;border-radius:10px;
+    font-variant-numeric:tabular-nums;min-width:186px;text-align:right;
+  }
+  .readout b{color:var(--ink);font-weight:600}
+  .readout .dim{color:#9a9080}
+  .compass{pointer-events:auto;cursor:pointer;
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;
+  }
+  .compass .needle{width:100%;height:100%;transition:transform .12s linear}
+  .compass svg{display:block}
+  .scalebar{font-size:10.5px;color:#6d6455;letter-spacing:.06em}
+  .scalebar .l{height:5px;border:1px solid #6d6455;border-top:0;position:relative;margin-bottom:3px}
+  .scalebar .l:before,.scalebar .l:after{content:"";position:absolute;top:-1px;width:1px;height:5px;background:#6d6455}
+  .scalebar .l:before{left:0}.scalebar .l:after{right:0}
+  /* ---------- 标签 ---------- */
+  #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:4;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .lb{
+    position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;
+    font-size:12px;line-height:1;white-space:nowrap;color:#2b2620;
+    transform:translate(-50%,-50%);will-change:transform,opacity;
+    pointer-events:auto;cursor:pointer;
+    text-shadow:0 0 2px #fbf7ec,0 0 2px #fbf7ec,0 0 5px rgba(251,247,236,.95),0 0 9px rgba(251,247,236,.75);
+    transition:opacity .2s;
+  }
+  .lb .mk{width:5px;height:5px;border-radius:50%;background:#2b2620;flex:none;box-shadow:0 0 0 2px rgba(252,248,238,.75)}
+  .lb small{font-size:10.5px;color:#7d7362;margin-left:1px;letter-spacing:.02em}
+  .lb-city{font-family:var(--serif);font-weight:700;font-size:13px;letter-spacing:.08em}
+  .lb-city .mk{width:6px;height:6px;border-radius:1px;transform:rotate(45deg);background:#2b2620}
+  .lb-mtn{font-family:var(--serif);font-style:italic;color:#6d5a44;letter-spacing:.14em;font-size:12px}
+  .lb-mtn .mk{width:0;height:0;background:none;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:7px solid #7d6a52;border-radius:0;box-shadow:none}
+  .lb-lake{font-family:var(--serif);color:#4a7290;letter-spacing:.1em;font-size:11.5px}
+  .lb-lake .mk{width:8px;height:8px;border-radius:2px;background:rgba(74,114,144,.55);box-shadow:none}
+  .lb-river{font-family:var(--serif);color:#3f6480;letter-spacing:.12em;font-style:italic;font-size:12px}
+  .lb-river .mk{width:9px;height:2px;border-radius:1px;background:#3f6480;box-shadow:none}
+  .lb-pass{font-size:11.5px;color:#7a3a2c;letter-spacing:.04em}
+  .lb-pass .mk{width:0;height:0;border-left:3.5px solid transparent;border-right:3.5px solid transparent;border-top:7px solid #8f4030;border-radius:0;box-shadow:none}
+  .lb.d0{opacity:0;pointer-events:none}
+  /* ---------- 提示卡 ---------- */
+  #tip{
+    position:fixed;z-index:9;max-width:250px;padding:10px 13px;border-radius:11px;
+    background:rgba(24,21,17,.93);color:#f6f1e4;font-size:11.5px;line-height:1.65;
+    letter-spacing:.03em;pointer-events:none;opacity:0;transform:translate(-50%,-118%);
+    transition:opacity .15s;box-shadow:0 16px 40px -20px rgba(0,0,0,.6);
+  }
+  #tip b{font-family:var(--serif);font-size:13px;letter-spacing:.08em;display:block;margin-bottom:3px;color:#fff}
+  #tip.on{opacity:1}
+  /* ---------- 说明面板 ---------- */
+  .doc{
+    position:fixed;right:20px;top:70px;width:min(360px,calc(100vw - 40px));max-height:calc(100vh - 110px);
+    overflow:auto;padding:20px 20px 18px;z-index:8;
+    opacity:0;transform:translateY(-8px) scale(.985);pointer-events:none;transition:all .22s ease;
+  }
+  .doc.on{opacity:1;transform:none;pointer-events:auto}
+  .doc h2{font-family:var(--serif);font-size:16px;margin:0 0 10px;letter-spacing:.08em}
+  .doc h3{font-family:var(--serif);font-size:12.5px;margin:16px 0 6px;letter-spacing:.1em;color:#8b7f6b}
+  .doc p,.doc li{font-size:12px;line-height:1.85;color:#4b4438;margin:0 0 6px}
+  .doc ul{margin:0;padding-left:16px}
+  .doc .note{font-size:11px;color:#8b8172;line-height:1.75;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .doc .x{position:absolute;right:12px;top:12px;border:0;background:none;font-size:16px;color:#9a9080;cursor:pointer;line-height:1;padding:4px}
+  /* ---------- 首次提示 ---------- */
+  .hint{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+    font-size:11.5px;color:#8b8172;letter-spacing:.16em;padding:8px 16px;border-radius:20px;
+    background:rgba(255,253,247,.72);border:1px solid rgba(33,29,24,.08);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    transition:opacity .8s;pointer-events:none;z-index:7;
+  }
+  .hint.gone{opacity:0}
+  /* ---------- 载入 ---------- */
+  #boot{
+    position:fixed;inset:0;display:grid;place-items:center;z-index:20;
+    background:var(--paper);transition:opacity .5s;font-size:13px;color:#6d6455;letter-spacing:.12em;
+    text-align:center;padding:24px;line-height:2;
+  }
+  #boot.gone{opacity:0;pointer-events:none}
+  #boot .t{font-family:var(--serif);font-size:15px;color:#3a332a;letter-spacing:.2em;margin-bottom:6px}
+  @media (max-width:760px){
+    .brand{left:16px;top:14px}
+    .brand h1{font-size:19px}
+    .brand p{display:none}
+    .tools{right:12px;top:12px}
+    .panel{left:12px;right:12px;width:auto;bottom:12px;padding:11px 12px}
+    .legend{display:none}
+    .ctr{margin:5px 0}
+    .hud{bottom:auto;top:64px;right:12px}
+    .readout{min-width:0;font-size:10.5px;padding:6px 9px}
+    .compass,.scalebar{display:none}
+    .views{margin-top:8px;padding-top:8px}
+    .hint{bottom:auto;top:104px;font-size:10.5px}
+    .doc{top:auto;bottom:12px;right:12px;left:12px;width:auto;max-height:62vh}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+<div class="vignette"></div>
+
+<div class="brand">
+  <div class="eyebrow">中国地势 · 三维</div>
+  <h1 id="regName">关中 · 中原 · 山西</h1>
+  <p id="regSub">山河表里，四塞之地</p>
+  <select id="regSel" class="regsel" aria-label="选择区域"></select>
+</div>
+
+<div class="tools">
+  <button class="tbtn" id="btnDir" title="把方向复位为正北朝上（不改变位置和远近）">方向复位</button>
+  <button class="tbtn" id="btnDoc">史地笔记</button>
+  <button class="tbtn" id="btnReset">重置视角</button>
+</div>
+
+<div class="panel glass">
+  <div class="legend">
+    <div class="bar"></div>
+    <div class="ticks"><span>0</span><span>1000</span><span>2000</span><span>3000</span><span>4000m</span></div>
+  </div>
+  <div class="ctr">
+    <div class="lab"><span>垂直夸张</span><b id="outVex">9×</b></div>
+    <input type="range" id="rVex" min="2" max="22" step="0.5" value="9">
+  </div>
+  <div class="chips">
+    <button class="chip on" data-t="rivers">河流</button>
+    <button class="chip on" data-t="places">地名</button>
+    <button class="chip on" data-t="passes">关隘</button>
+    <button class="chip on" data-t="bounds">今省界</button>
+    <button class="chip" data-m="pan" title="拖动时平移地图，而不是绕中心旋转">自由拖动</button>
+  </div>
+  <div class="views" id="views"></div>
+</div>
+
+<div class="hud">
+  <div class="readout glass" id="readout">
+    <div><span class="dim">海拔</span> <b id="roH">—</b></div>
+    <div><span class="dim">坐标</span> <span id="roLL">移动鼠标查看</span></div>
+  </div>
+  <div class="compass glass" title="点击把方向复位为正北朝上"><div class="needle" id="needle">
+    <svg viewBox="0 0 56 56" width="40" height="40" aria-hidden="true">
+      <path d="M28 8 L34 30 L28 26 L22 30 Z" fill="#9a3b2e"/>
+      <path d="M28 48 L22 30 L28 34 L34 30 Z" fill="#b9ae99"/>
+      <text x="28" y="7" font-size="7" text-anchor="middle" fill="#6d6455" font-family="serif">N</text>
+    </svg>
+  </div></div>
+  <div class="scalebar"><div class="l" id="scaleL" style="width:100px"></div><span id="scaleT">100 km</span></div>
+</div>
+
+<div id="labels"></div>
+<div id="tip"></div>
+
+<div class="doc glass" id="doc">
+  <button class="x" id="docClose" aria-label="关闭">✕</button>
+  <h2>怎么看这张图</h2>
+  <p>三维地形来自真实高程网格（约 1–1.6 公里一格），河流是真实河道。垂直方向做了夸张，否则千公里尺度上山脉几乎看不出来；平原区夸张倍数会自动加大。</p>
+
+  <div data-reg="huaxia">
+    <h3>关中的四塞</h3>
+    <p>东有函谷、潼关，西有大散关，南有武关，北有萧关。四面环山、中间是渭河冲积平原，进可东出中原，退可闭关自守——秦、汉、唐皆据此立国。</p>
+    <h3>中原：四战之地</h3>
+    <p>黄河冲积平原一马平川，无险可守。控制中原的关键不在平原本身，而在周围的关隘与渡口：虎牢、孟津、白马津。</p>
+    <h3>江南：长江天堑</h3>
+    <p>江面宽阔、渡口有限。采石、瓜洲、京口、濡须口，谁控制渡口，谁就掌握南北往来的主动权。东晋、南朝、南宋皆倚此立国。</p>
+    <h3>巴蜀：剑阁之险</h3>
+    <p>秦岭、大巴山两重屏障，中间夹着汉中盆地；剑门关扼守金牛道南口。闭关则自守，出关则可下荆襄、争天下——刘邦、刘备皆由此起。</p>
+    <h3>岭南：五岭之隔</h3>
+    <p>南岭横亘在湘赣与两广之间，只有灵渠、梅关等少数孔道可通。中原势力南下多走湘桂走廊或大庾岭；割据岭南者，也只是守住这几处隘口。</p>
+  </div>
+
+  <p class="note">数据：高程 Mapzen / AWS Terrain Tiles（基于 SRTM 等公开数据）；河流 © OpenStreetMap contributors（ODbL）；今省界来自 DataV.GeoAtlas，仅作方位参照，不作为边界依据。地名年代混杂，古今对照以注释为准。</p>
+</div>
+
+<div class="hint" id="hint">拖动旋转 · 滚轮缩放 · 右键平移 · 点击地名可聚焦</div>
+
+<div id="boot"><div><div class="t">正在生成地势</div><div id="bootMsg">载入高程数据…</div></div></div>
+
+<script src="data/regions.js"></script>
+<script>
+"use strict";
+(function () {
+  /* =====================================================================
+     中国地势 3D · 单文件 WebGL2 渲染器
+     - 高程：区域数据里的 8bit PNG（data URI），h = maxH * (v/255)^gamma
+     - 河流 / 省界：经纬度折线，屏幕空间加粗
+     - 标签：DOM 覆盖层，逐帧投影
+     ===================================================================== */
+
+  var CV = document.getElementById("gl");
+  var bootEl = document.getElementById("boot");
+  var bootMsg = document.getElementById("bootMsg");
+  var qs = new URLSearchParams(location.search);
+  var LITE = qs.has("lite");
+
+  function fail(msg) {
+    bootEl.classList.remove("gone");
+    document.getElementById("boot").querySelector(".t").textContent = "无法渲染";
+    bootMsg.textContent = msg;
+    document.title = "ERROR: " + msg;
+  }
+  window.addEventListener("error", function (e) {
+    document.documentElement.setAttribute("data-err", (e.message || "err") + " @" + (e.lineno || 0));
+    if (!bootEl.classList.contains("gone")) fail(e.message || "脚本错误");
+  });
+
+  var gl = CV.getContext("webgl2", {
+    antialias: true, alpha: true, premultipliedAlpha: false,
+    powerPreference: "high-performance", preserveDrawingBuffer: false
+  });
+  if (!gl) { fail("此浏览器不支持 WebGL2，请换用较新的 Chrome / Edge / Safari。"); return; }
+
+  /* ---------------------------------------------------------------- 区域 */
+  function startAll(id) {
+  var REGS = (window.GEO3D && window.GEO3D.regions) || {};
+  var D = REGS[id] || REGS[Object.keys(REGS)[0]];
+  if (!D) { fail("地形数据载入失败。"); return; }
+  LUTMAX = Math.min(D.maxH || 5000, 4600);
+  Array.prototype.forEach.call(document.querySelectorAll("#doc [data-reg]"), function (b) {
+    b.hidden = (b.getAttribute("data-reg") !== D.id);
+  });
+  VEX = +(qs.get("vex") || D.vex || 9);
+  document.getElementById("rVex").value = VEX;
+  document.getElementById("outVex").textContent = (VEX % 1 ? VEX.toFixed(1) : VEX) + "×";
+  (function () {
+    var t = document.querySelectorAll(".legend .ticks span");
+    if (t.length < 5) return;
+    var f = [0, 0.33, 0.66, 0.9, 1];
+    for (var i = 0; i < 5; i++) t[i].textContent = Math.round(LUTMAX * f[i] / 50) * 50 + (i === 4 ? "m" : "");
+  })();
+
+  var B = D.bbox;
+  var latMid = (B[1] + B[3]) / 2;
+  var WKM = (B[2] - B[0]) * 111.32 * Math.cos(latMid * Math.PI / 180);
+  var DKM = (B[3] - B[1]) * 111.32;
+  var MAXH = D.maxH, GAMMA = D.gamma;
+  var NW = D.w, NH = D.h;
+
+  var AZ0 = +(qs.get("az0") || 28), EL0 = +(qs.get("el0") || 40);
+  var FOVY = 30;                  // 视场角（长焦感，减少透视畸变）
+  var VEX = 9;                    // 垂直夸张
+  var SUN_AZ = 320, SUN_ALT = 28; // 固定日照：西北方向、约 28°
+  var SUNX = 0, SUNY = 1, SUNZ = 0;
+  function updateSun() {
+    var az = SUN_AZ * Math.PI / 180, alt = SUN_ALT * Math.PI / 180;
+    var x = Math.sin(az) * Math.cos(alt), z = Math.cos(az) * Math.cos(alt);
+    SUNX = x; SUNY = Math.sin(alt); SUNZ = -z;
+    var l = Math.hypot(SUNX, SUNY, SUNZ);
+    SUNX /= l; SUNY /= l; SUNZ /= l;
+  }
+  updateSun();
+  var OPTS = { rivers: true, places: true, passes: true, bounds: true };
+
+  document.getElementById("regName").textContent = D.name;
+  document.getElementById("regSub").textContent = D.sub;
+
+  /* ---------------------------------------------------------------- 矩阵 */
+  function mat4() { return new Float32Array(16); }
+  function perspective(out, fovy, aspect, near, far) {
+    var f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+    out[0] = f / aspect; out[1] = 0; out[2] = 0; out[3] = 0;
+    out[4] = 0; out[5] = f; out[6] = 0; out[7] = 0;
+    out[8] = 0; out[9] = 0; out[10] = (far + near) * nf; out[11] = -1;
+    out[12] = 0; out[13] = 0; out[14] = 2 * far * near * nf; out[15] = 0;
+    return out;
+  }
+  function lookAt(out, eye, center, up) {
+    var zx = eye[0] - center[0], zy = eye[1] - center[1], zz = eye[2] - center[2];
+    var l = Math.hypot(zx, zy, zz) || 1; zx /= l; zy /= l; zz /= l;
+    var xx = up[1] * zz - up[2] * zy, xy = up[2] * zx - up[0] * zz, xz = up[0] * zy - up[1] * zx;
+    l = Math.hypot(xx, xy, xz) || 1; xx /= l; xy /= l; xz /= l;
+    var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx;
+    out[0] = xx; out[1] = yx; out[2] = zx; out[3] = 0;
+    out[4] = xy; out[5] = yy; out[6] = zy; out[7] = 0;
+    out[8] = xz; out[9] = yz; out[10] = zz; out[11] = 0;
+    out[12] = -(xx * eye[0] + xy * eye[1] + xz * eye[2]);
+    out[13] = -(yx * eye[0] + yy * eye[1] + yz * eye[2]);
+    out[14] = -(zx * eye[0] + zy * eye[1] + zz * eye[2]);
+    out[15] = 1;
+    return out;
+  }
+  function mul(out, a, b) {
+    var o = new Float32Array(16);
+    for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) {
+      o[j * 4 + i] = a[i] * b[j * 4] + a[4 + i] * b[j * 4 + 1] + a[8 + i] * b[j * 4 + 2] + a[12 + i] * b[j * 4 + 3];
+    }
+    out.set(o); return out;
+  }
+
+  /* ---------------------------------------------------------------- 相机 */
+  var cam = { az: 28, el: 40, dist: 1500, tx: WKM / 2, ty: 0, tz: DKM / 2 };
+  var HOME = null;
+  var VP = mat4(), PROJ = mat4(), VIEW = mat4();
+  var EYE = [0, 0, 0];
+
+  function camEye() {
+    var ce = Math.cos(cam.el * Math.PI / 180), se = Math.sin(cam.el * Math.PI / 180);
+    var ca = Math.cos(cam.az * Math.PI / 180), sa = Math.sin(cam.az * Math.PI / 180);
+    EYE[0] = cam.tx + cam.dist * sa * ce;
+    EYE[1] = cam.ty + cam.dist * se;
+    EYE[2] = cam.tz + cam.dist * ca * ce;
+    return EYE;
+  }
+
+  var cssW = 1, cssH = 1, dpr = 1;
+  function resize() {
+    cssW = CV.clientWidth || window.innerWidth;
+    cssH = CV.clientHeight || window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    CV.width = Math.max(1, Math.round(cssW * dpr));
+    CV.height = Math.max(1, Math.round(cssH * dpr));
+    gl.viewport(0, 0, CV.width, CV.height);
+  }
+  var READY = false, TOUCHED = false;
+window.addEventListener("resize", function () {
+    resize();
+    if (READY && !TOUCHED) fitView(cam.az, cam.el, true); else draw();
+  });
+
+  function updateMatrices() {
+    var aspect = CV.width / Math.max(1, CV.height);
+    perspective(PROJ, FOVY * Math.PI / 180, aspect, Math.max(30, cam.dist * 0.02), cam.dist * 4 + 12000);
+    lookAt(VIEW, camEye(), [cam.tx, cam.ty, cam.tz], [0, 1, 0]);
+    mul(VP, PROJ, VIEW);
+  }
+
+  /* ---------------------------------------------------------------- 高程采样 */
+  var HEIGHT = null;      // Uint8Array
+  var texH = null;
+
+  function sampleH(lon, lat) { // 米
+    if (!HEIGHT) return 0;
+    var fx = (lon - B[0]) / (B[2] - B[0]) * (NW - 1);
+    var fy = (B[3] - lat) / (B[3] - B[1]) * (NH - 1);
+    fx = Math.min(Math.max(fx, 0), NW - 1.001);
+    fy = Math.min(Math.max(fy, 0), NH - 1.001);
+    var x0 = Math.floor(fx), y0 = Math.floor(fy);
+    var tx = fx - x0, ty = fy - y0;
+    var x1 = Math.min(x0 + 1, NW - 1), y1 = Math.min(y0 + 1, NH - 1);
+    var h00 = HEIGHT[y0 * NW + x0], h10 = HEIGHT[y0 * NW + x1];
+    var h01 = HEIGHT[y1 * NW + x0], h11 = HEIGHT[y1 * NW + x1];
+    var v = (h00 * (1 - tx) + h10 * tx) * (1 - ty) + (h01 * (1 - tx) + h11 * tx) * ty;
+    return MAXH * Math.pow(v / 255, GAMMA);
+  }
+  function toWorld(lon, lat) {
+    return [(lon - B[0]) / (B[2] - B[0]) * WKM, 0, (B[3] - lat) / (B[3] - B[1]) * DKM];
+  }
+
+  /* ---------------------------------------------------------------- 着色器 */
+  function compile(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      throw new Error("Shader: " + gl.getShaderInfoLog(s));
+    }
+    return s;
+  }
+  function program(vs, fs) {
+    var p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error("Link: " + gl.getProgramInfoLog(p));
+    return p;
+  }
+  function uniforms(p, names) {
+    var o = {};
+    for (var i = 0; i < names.length; i++) o[names[i]] = gl.getUniformLocation(p, names[i]);
+    return o;
+  }
+
+  var TERRAIN_VS = `#version 300 es
+  in vec2 aUV;
+  uniform mat4 uVP;
+  uniform sampler2D uH;
+  uniform float uMaxH, uVex, uWKM, uDKM, uGamma;
+  out vec2 vUV;
+  out vec3 vPos;
+  void main() {
+    float h = texture(uH, aUV).r;
+    float y = uMaxH * pow(h, uGamma) / 1000.0 * uVex;
+    vec3 p = vec3(aUV.x * uWKM, y, aUV.y * uDKM);
+    vUV = aUV; vPos = p;
+    gl_Position = uVP * vec4(p, 1.0);
+  }`;
+
+  var TERRAIN_FS = `#version 300 es
+  precision highp float;
+  in vec2 vUV;
+  in vec3 vPos;
+  uniform sampler2D uH, uLUT;
+  uniform vec2 uRes;
+  uniform float uLutMax;
+  uniform float uMaxH, uVex, uWKM, uDKM, uGamma;
+  uniform vec3 uSun, uEye, uBg;
+  uniform float uHaze;
+  out vec4 outColor;
+
+  float H(vec2 uv) { return texture(uH, clamp(uv, vec2(0.0), vec2(1.0))).r; }
+
+  void main() {
+    vec2 texel = 1.0 / uRes;
+    float hC = H(vUV);
+    vec2 nr = texel * 2.0;
+    float hL = H(vUV - vec2(nr.x, 0.0));
+    float hR = H(vUV + vec2(nr.x, 0.0));
+    float hN = H(vUV - vec2(0.0, nr.y));
+    float hS = H(vUV + vec2(0.0, nr.y));
+
+    float kmx = 2.0 * nr.x * uWKM;
+    float kmz = 2.0 * nr.y * uDKM;
+    float sx = (hR - hL) * uMaxH / 1000.0 * uVex / kmx;
+    float sz = (hS - hN) * uMaxH / 1000.0 * uVex / kmz;
+    vec3 N = normalize(vec3(-sx, 1.0, -sz));
+
+    float elev = uMaxH * pow(hC, uGamma);
+    float t = clamp(elev / uLutMax, 0.0, 1.0);
+    vec3 base = texture(uLUT, vec2(t, 0.5)).rgb;
+
+    // 陡坡露出岩土色
+    float slope = 1.0 - N.y;
+    base = mix(base, base * vec3(0.78, 0.72, 0.66), smoothstep(0.20, 0.62, slope) * 0.85);
+
+    // 简易环境光遮蔽：四周越高，越低洼
+    float occ = 0.0;
+    for (int i = 0; i < 6; i++) {
+      float a = float(i) * 1.0472 + 0.4;
+      vec2 o = vec2(cos(a), sin(a)) * texel * 4.0;
+      occ += max(0.0, H(vUV + o) - hC);
+    }
+    float ao = clamp(1.0 - occ / 6.0 * 5.0, 0.70, 1.0);
+
+    vec3 L = normalize(uSun);
+    float diff = max(dot(N, L), 0.0);
+    float lit = diff;
+    vec3 col = base * (0.38 + 0.66 * lit) * ao;
+    col *= mix(vec3(0.90, 0.94, 1.05), vec3(1.0), clamp(lit * 2.0, 0.0, 1.0));
+
+    // 空气透视
+    float dist = length(vPos - uEye);
+    float fog = 1.0 - exp(-dist * uHaze);
+    col = mix(col, uBg, clamp(fog, 0.0, 0.40));
+
+    // 顶面与背景的界限：轻微描边
+    outColor = vec4(col, 1.0);
+  }`;
+
+  var SIDE_VS = `#version 300 es
+  in vec3 aTop;    // x, h_km, z
+  in float aBase;  // 1 = 底面顶点
+  uniform mat4 uVP;
+  uniform float uVex, uBase;
+  out vec3 vPos;
+  out float vH;
+  void main() {
+    vH = aTop.y * 1000.0;
+    float y = mix(aTop.y * uVex, uBase, aBase);
+    vec3 p = vec3(aTop.x, y, aTop.z);
+    vPos = p;
+    gl_Position = uVP * vec4(p, 1.0);
+  }`;
+
+  var LINE_VS = `#version 300 es
+  in vec3 aA; in vec3 aB; in float aSide; in float aEnd;
+  uniform mat4 uVP;
+  uniform vec2 uViewport;
+  uniform float uWidth, uVex, uClear;
+  out float vSide;
+  void main() {
+    vec4 cA = uVP * vec4(aA.x, aA.y * uVex + uClear, aA.z, 1.0);
+    vec4 cB = uVP * vec4(aB.x, aB.y * uVex + uClear, aB.z, 1.0);
+    if (cA.w <= 0.001 || cB.w <= 0.001) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); vSide = 0.0; return; }
+    vec2 sA = cA.xy / cA.w * uViewport;
+    vec2 sB = cB.xy / cB.w * uViewport;
+    vec2 d = sB - sA;
+    float len = length(d);
+    d = len < 1e-5 ? vec2(1.0, 0.0) : d / len;
+    vec2 nrm = vec2(-d.y, d.x);
+    vec4 c = mix(cA, cB, aEnd);
+    vec2 off = nrm * aSide * (uWidth * 0.5) / uViewport * 2.0;
+    c.xy += off * c.w;
+    gl_Position = c;
+    vSide = aSide;
+  }`;
+
+  var LINE_FS = `#version 300 es
+  precision highp float;
+  uniform vec4 uColor;
+  out vec4 outColor;
+  void main() { outColor = uColor; }`;
+
+  var FLAT_VS = `#version 300 es
+  in vec3 aPos;
+  uniform mat4 uVP;
+  uniform float uVex, uClear;
+  void main() { gl_Position = uVP * vec4(aPos.x, aPos.y * uVex + uClear, aPos.z, 1.0); }`;
+  var FLAT_FS = `#version 300 es
+  precision highp float;
+  uniform vec4 uColor;
+  out vec4 outColor;
+  void main() { outColor = uColor; }`;
+
+  var pTerrain = program(TERRAIN_VS, TERRAIN_FS);
+  var SHADOW_VS = `#version 300 es
+  in vec2 aXY;
+  uniform mat4 uVP;
+  uniform vec3 uOrigin;
+  uniform vec2 uSize;
+  out vec2 vUV;
+  void main() {
+    vUV = aXY;
+    vec3 p = vec3(uOrigin.x + aXY.x * uSize.x, uOrigin.y, uOrigin.z + aXY.y * uSize.y);
+    gl_Position = uVP * vec4(p, 1.0);
+  }`;
+  var SHADOW_FS = `#version 300 es
+  precision highp float;
+  in vec2 vUV;
+  out vec4 outColor;
+  void main() {
+    // 圆角矩形的柔边：只露出一圈淡影，避免整块底板发黑
+    vec2 d = abs(vUV - 0.5);
+    float m = max(d.x, d.y);
+    float a = smoothstep(0.50, 0.42, m) * 0.17;
+    outColor = vec4(0.30, 0.24, 0.16, a);
+  }`;
+  var pShadow = program(SHADOW_VS, SHADOW_FS);
+  var uShadowP = uniforms(pShadow, ["uVP", "uOrigin", "uSize"]);
+  var uTerrain = uniforms(pTerrain, ["uVP", "uH", "uLUT", "uRes", "uMaxH", "uVex", "uWKM", "uDKM",
+    "uGamma", "uLutMax", "uSun", "uEye", "uBg", "uHaze"]);
+  var pLine = program(LINE_VS, LINE_FS);
+  var uLine = uniforms(pLine, ["uVP", "uViewport", "uWidth", "uVex", "uClear", "uColor"]);
+  var pFlat = program(FLAT_VS, FLAT_FS);
+  var uFlat = uniforms(pFlat, ["uVP", "uVex", "uClear", "uColor"]);
+  var pSide = program(SIDE_VS, `#version 300 es
+  precision highp float;
+  in vec3 vPos; in float vH;
+  uniform sampler2D uLUT;
+  uniform float uLutMax;
+  out vec4 outColor;
+  void main() {
+    vec3 base = texture(uLUT, vec2(clamp(vH / uLutMax, 0.0, 1.0), 0.5)).rgb;
+    float band = 0.93 + 0.07 * sin(vH * 0.06);
+    vec3 col = base * 0.44 * band;
+    outColor = vec4(col, 1.0);
+  }`);
+  var uSide = uniforms(pSide, ["uVP", "uVex", "uLUT", "uBase", "uLutMax"]);
+
+  /* ---------------------------------------------------------------- LUT */
+  var STOPS = [[0, "#93ab84"], [150, "#b9c093"], [450, "#d0c79c"], [900, "#d8bb87"],
+               [1400, "#c3955f"], [2100, "#a3744f"], [3000, "#835f4a"], [3700, "#8f837a"],
+               [4300, "#d8d4cc"], [5000, "#f2f0ec"]];
+  function hex2rgb(h) {
+    return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  }
+  function buildLUT(lutMax) {
+    var N = 512, data = new Uint8Array(N * 4);
+    var stop = STOPS.map(function (s) { return [s[0], hex2rgb(s[1])]; });
+    for (var i = 0; i < N; i++) {
+      var e = i / (N - 1) * lutMax;
+      var a = stop[0], b = stop[stop.length - 1];
+      for (var k = 0; k < stop.length - 1; k++) {
+        if (e >= stop[k][0] && e <= stop[k + 1][0]) { a = stop[k]; b = stop[k + 1]; break; }
+      }
+      var t = b[0] === a[0] ? 0 : (e - a[0]) / (b[0] - a[0]);
+      t = Math.min(Math.max(t, 0), 1);
+      for (var c = 0; c < 3; c++) data[i * 4 + c] = Math.round(a[1][c] + (b[1][c] - a[1][c]) * t);
+      data[i * 4 + 3] = 255;
+    }
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, N, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return tex;
+  }
+  var texLUT = null, LUTMAX = 5000;
+
+  /* ---------------------------------------------------------------- 投影阴影 */
+  var shadowVAO = null;
+  function buildShadow() {
+    var quad = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
+    var vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    var vb = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+    gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null);
+    shadowVAO = vao;
+  }
+
+  /* ---------------------------------------------------------------- 载入高程 */
+  function loadHeight(uri, cb) {
+    var img = new Image();
+    img.onload = function () {
+      var c = document.createElement("canvas");
+      c.width = NW; c.height = NH;
+      var ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      var px = ctx.getImageData(0, 0, NW, NH).data;
+      var arr = new Uint8Array(NW * NH);
+      for (var i = 0, j = 0; i < arr.length; i++, j += 4) arr[i] = px[j];
+      HEIGHT = arr;
+      cb();
+    };
+    img.onerror = function () { fail("高程纹理解码失败。"); };
+    img.src = uri;
+  }
+
+  /* ---------------------------------------------------------------- 地形网格 */
+  var terrain = null;
+  function buildTerrain() {
+    var step = Math.max(1, Math.round(+(qs.get("step") || (LITE ? 3 : ((cssW < 820 || NW > 900) ? 2 : 1)))));
+    var nx = Math.floor((NW - 1) / step) + 1;
+    var ny = Math.floor((NH - 1) / step) + 1;
+    var uv = new Float32Array(nx * ny * 2);
+    var k = 0;
+    for (var y = 0; y < ny; y++) {
+      for (var x = 0; x < nx; x++) {
+        uv[k++] = x / (nx - 1);
+        uv[k++] = y / (ny - 1);
+      }
+    }
+    var idx = new Uint32Array((nx - 1) * (ny - 1) * 6);
+    k = 0;
+    for (y = 0; y < ny - 1; y++) {
+      for (x = 0; x < nx - 1; x++) {
+        var a = y * nx + x, b = a + 1, c = a + nx, d = c + 1;
+        idx[k++] = a; idx[k++] = c; idx[k++] = b;
+        idx[k++] = b; idx[k++] = c; idx[k++] = d;
+      }
+    }
+    var vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    var vb = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+    gl.bufferData(gl.ARRAY_BUFFER, uv, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    var ib = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+    gl.bindVertexArray(null);
+    terrain = { vao: vao, count: idx.length, tris: idx.length / 3, nx: nx, ny: ny };
+  }
+
+  /* ---------------------------------------------------------------- 数据 → GPU */
+  var gTex = null;
+  function uploadHeightTexture() {
+    gTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, gTex);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, NW, NH, 0, gl.RED, gl.UNSIGNED_BYTE, HEIGHT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+
+  var lineBatches = [];   // {vao, count, color, width, clear, kind}
+  function makeLineBatch(segs, color, width, clear) {
+    // segs: [[ax,ay,az,bx,by,bz], ...]
+    var n = segs.length;
+    if (!n) return null;
+    var buf = new Float32Array(n * 6 * 8);
+    var k = 0;
+    for (var i = 0; i < n; i++) {
+      var s = segs[i];
+      for (var v = 0; v < 6; v++) {
+        var end = (v === 2 || v === 3 || v === 4) ? 1 : 0;
+        var side = (v === 0 || v === 3 || v === 5) ? -1 : 1;
+        buf[k++] = s[0]; buf[k++] = s[1]; buf[k++] = s[2];
+        buf[k++] = s[3]; buf[k++] = s[4]; buf[k++] = s[5];
+        buf[k++] = side; buf[k++] = end;
+      }
+    }
+    var vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    var vb = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+    gl.bufferData(gl.ARRAY_BUFFER, buf, gl.STATIC_DRAW);
+    var stride = 32;
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, stride, 12);
+    gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, stride, 24);
+    gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 1, gl.FLOAT, false, stride, 28);
+    gl.bindVertexArray(null);
+    return { vao: vao, count: n * 6, color: color, width: width, clear: clear };
+  }
+
+  function riverColor(n) {
+    if (n === "黄河") return [0.40, 0.45, 0.53, 1.0];
+    return [0.22, 0.39, 0.53, 1.0];
+  }
+
+  var riverBatches = [], boundBatch = null, lakeVao = null, lakeCount = 0;
+
+  function buildOverlays() {
+    var groups = {};
+    (D.rivers || []).forEach(function (r) {
+      var col = riverColor(r.n);
+      var key = col.join(",") + "|" + r.w;
+      if (!groups[key]) groups[key] = { color: col, width: r.w, segs: [] };
+      var pts = r.pts, g = groups[key];
+      var prev = null;
+      for (var i = 0; i < pts.length; i++) {
+        var w = toWorld(pts[i][0], pts[i][1]);
+        var y = sampleH(pts[i][0], pts[i][1]) / 1000;
+        var cur = [w[0], y, w[2]];
+        if (prev) g.segs.push([prev[0], prev[1], prev[2], cur[0], cur[1], cur[2]]);
+        prev = cur;
+      }
+    });
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k];
+      var b = makeLineBatch(g.segs, g.color, g.width, 0.06);
+      if (b) { b.kind = "river"; riverBatches.push(b); }
+    });
+
+    // 省界虚线
+    var bsegs = [];
+    (D.provinces || []).forEach(function (pr) {
+      var pts = pr.pts;
+      if (pts.length < 2) return;
+      var dash = 9, gap = 6, acc = 0, on = true;
+      var prev = null;
+      for (var i = 0; i < pts.length; i++) {
+        var w = toWorld(pts[i][0], pts[i][1]);
+        var y = sampleH(pts[i][0], pts[i][1]) / 1000;
+        var cur = [w[0], y, w[2]];
+        var out = (cur[0] < 0 || cur[0] > WKM || cur[2] < 0 || cur[2] > DKM);
+        if (out) { prev = null; continue; }
+        if (prev) {
+          var dx = cur[0] - prev[0], dz = cur[2] - prev[2];
+          var len = Math.hypot(dx, dz), t = 0;
+          while (t < len) {
+            var remain = on ? dash - acc : gap - acc;
+            var step = Math.min(remain, len - t);
+            var x0 = prev[0] + dx * (t / len), z0 = prev[2] + dz * (t / len);
+            var x1 = prev[0] + dx * ((t + step) / len), z1 = prev[2] + dz * ((t + step) / len);
+            if (on) bsegs.push([x0, prev[1] + (cur[1] - prev[1]) * (t / len), z0,
+                                x1, prev[1] + (cur[1] - prev[1]) * ((t + step) / len), z1]);
+            t += step; acc += step;
+            if (acc >= (on ? dash : gap) - 1e-6) { acc = 0; on = !on; }
+          }
+        }
+        prev = cur;
+      }
+    });
+    boundBatch = makeLineBatch(bsegs, [0.34, 0.31, 0.25, 0.62], 1.25, 0.07);
+
+    // 湖泊
+    var tricks = [];
+    (D.lakes || []).forEach(function (l) {
+      var pts = l.pts;
+      if (pts.length < 3) return;
+      var cx = 0, cz = 0, i;
+      for (i = 0; i < pts.length; i++) { var w = toWorld(pts[i][0], pts[i][1]); cx += w[0]; cz += w[2]; }
+      cx /= pts.length; cz /= pts.length;
+      var hy = 0;
+      for (i = 0; i < pts.length; i++) hy = Math.max(hy, sampleH(pts[i][0], pts[i][1]));
+      for (i = 0; i < pts.length; i++) {
+        var a = pts[i], b = pts[(i + 1) % pts.length];
+        var wa = toWorld(a[0], a[1]), wb = toWorld(b[0], b[1]);
+        tricks.push([cx, hy / 1000, cz, wa[0], hy / 1000, wa[2], wb[0], hy / 1000, wb[2]]);
+      }
+    });
+    if (tricks.length) {
+      var arr = new Float32Array(tricks.length * 9);
+      for (var i = 0; i < tricks.length; i++) arr.set(tricks[i], i * 9);
+      var vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
+      var vb = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+      gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      gl.bindVertexArray(null);
+      lakeVao = vao; lakeCount = tricks.length * 3;
+    }
+  }
+
+  /* ---------------------------------------------------------------- 侧壁 */
+  var sideVAO = null, sideCount = 0;
+  function buildSides() {
+    var step = 6;
+    var pos = [];
+    function edge(pts) {
+      for (var i = 0; i < pts.length - 1; i++) {
+        var a = pts[i], b = pts[i + 1];
+        pos.push(a[0], a[1], a[2], 0);
+        pos.push(a[0], a[1], a[2], 1);
+        pos.push(b[0], b[1], b[2], 0);
+        pos.push(b[0], b[1], b[2], 0);
+        pos.push(a[0], a[1], a[2], 1);
+        pos.push(b[0], b[1], b[2], 1);
+      }
+    }
+    var top = [];
+    var nx = Math.floor((NW - 1) / step) + 1;
+    var ny = Math.floor((NH - 1) / step) + 1;
+    var i, j;
+    function hAt(px, py) { return MAXH * Math.pow(HEIGHT[py * NW + px] / 255, GAMMA) / 1000; }
+    top = [];
+    for (i = 0; i < nx; i++) {
+      var u = i / (nx - 1);
+      top.push([u * WKM, hAt(Math.min(NW - 1, Math.round(u * (NW - 1))), 0), 0]);
+    }
+    edge(top);
+    top = [];
+    for (i = 0; i < nx; i++) {
+      var u2 = i / (nx - 1), px = Math.min(NW - 1, Math.round(u2 * (NW - 1)));
+      top.push([u2 * WKM, hAt(px, NH - 1), DKM]);
+    }
+    edge(top);
+    top = [];
+    for (j = 0; j < ny; j++) {
+      var v = j / (ny - 1), py = Math.min(NH - 1, Math.round(v * (NH - 1)));
+      top.push([0, hAt(0, py), v * DKM]);
+    }
+    edge(top);
+    top = [];
+    for (j = 0; j < ny; j++) {
+      var v2 = j / (ny - 1), py2 = Math.min(NH - 1, Math.round(v2 * (NH - 1)));
+      top.push([WKM, hAt(NW - 1, py2), v2 * DKM]);
+    }
+    edge(top);
+
+    var arr = new Float32Array(pos.length);
+    for (i = 0; i < pos.length; i++) arr[i] = pos[i];
+    var vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    var vb = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+    gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 16, 12);
+    gl.bindVertexArray(null);
+    sideVAO = vao; sideCount = pos.length / 4;
+  }
+
+  /* ---------------------------------------------------------------- HUD */
+  var roH = document.getElementById("roH"), roLL = document.getElementById("roLL");
+  var needle = document.getElementById("needle");
+  var scaleL = document.getElementById("scaleL"), scaleT = document.getElementById("scaleT");
+
+  function updateHUD() {
+    needle.style.transform = "rotate(" + (-cam.az) + "deg)";
+    var pxPerKm = (2 * cam.dist * Math.tan(FOVY * Math.PI / 360)) / cssH;
+    var targetPx = Math.min(140, Math.max(70, cssW * 0.11));
+    var km = targetPx * pxPerKm;
+    var nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 300, 500, 800, 1000];
+    var best = nice[0];
+    for (var i = 0; i < nice.length; i++) if (Math.abs(nice[i] - km) < Math.abs(best - km)) best = nice[i];
+    scaleL.style.width = Math.round(best / pxPerKm) + "px";
+    scaleT.textContent = best + " km";
+  }
+
+  /* ---------------------------------------------------------------- 拾取 */
+  function pickTerrain(mx, my) {
+    var x = (mx / cssW) * 2 - 1, y = 1 - (my / cssH) * 2;
+    var inv = invert4(VP);
+    if (!inv) return null;
+    var p0 = apply4(inv, x, y, -1, 1);
+    var p1 = apply4(inv, x, y, 1, 1);
+    if (!p0 || !p1) return null;
+    var dir = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+    var len = Math.hypot(dir[0], dir[1], dir[2]);
+    dir[0] /= len; dir[1] /= len; dir[2] /= len;
+    var o = p0;
+    var t = 0, maxT = cam.dist * 3 + 6000;
+    var stepKm = Math.max(0.6, cam.dist / 420);
+    for (var i = 0; i < 900; i++) {
+      t += stepKm;
+      if (t > maxT) break;
+      var px = o[0] + dir[0] * t, py = o[1] + dir[1] * t, pz = o[2] + dir[2] * t;
+      if (pz < 0 || pz > DKM || px < 0 || px > WKM) { if (py < -2) break; continue; }
+      var lon = B[0] + px / WKM * (B[2] - B[0]);
+      var lat = B[3] - pz / DKM * (B[3] - B[1]);
+      var h = sampleH(lon, lat) / 1000 * VEX;
+      if (py <= h) return { lon: lon, lat: lat, h: sampleH(lon, lat) };
+    }
+    return null;
+  }
+
+  function invert4(a) {
+    var o = new Float32Array(16);
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    var b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10, b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30, b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32;
+    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (!det) return null;
+    det = 1.0 / det;
+    o[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    o[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    o[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    o[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    o[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    o[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    o[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    o[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    o[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    o[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    o[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    o[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    o[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+    o[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+    o[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+    o[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+    return o;
+  }
+  function apply4(m, x, y, z, w) {
+    var ox = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
+    var oy = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
+    var oz = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+    var ow = m[3] * x + m[7] * y + m[11] * z + m[15] * w;
+    if (Math.abs(ow) < 1e-6) return null;
+    return [ox / ow, oy / ow, oz / ow];
+  }
+
+  /* ---------------------------------------------------------------- 交互 */
+  var DRAGMODE = false;
+  var dragging = false, panning = false, px0 = 0, py0 = 0;
+  var pointers = new Map();
+  var pinchStart = 0;
+
+  CV.addEventListener("pointerdown", function (e) {
+    TOUCHED = true;
+    CV.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 1) {
+      dragging = true; panning = (e.button === 2 || e.shiftKey || DRAGMODE);
+      px0 = e.clientX; py0 = e.clientY;
+      CV.classList.add("dragging");
+      stopAnim();
+    } else if (pointers.size === 2) {
+      var p = Array.from(pointers.values());
+      pinchStart = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]);
+    }
+    document.getElementById("hint").classList.add("gone");
+  });
+  CV.addEventListener("pointermove", function (e) {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      var p = Array.from(pointers.values());
+      var d = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]);
+      if (pinchStart > 0) cam.dist = clamp(cam.dist * (pinchStart / d), 120, 9000);
+      pinchStart = d;
+      draw();
+      return;
+    }
+    if (dragging) {
+      var dx = e.clientX - px0, dy = e.clientY - py0;
+      px0 = e.clientX; py0 = e.clientY;
+      if (panning) pan(dx, dy);
+      else {
+        cam.az -= dx * 0.32;
+        cam.el = clamp(cam.el + dy * 0.26, 6, 89);
+      }
+      draw();
+      return;
+    }
+    var r = CV.getBoundingClientRect();
+    var hit = pickTerrain(e.clientX - r.left, e.clientY - r.top);
+    if (hit) {
+      roH.textContent = Math.round(hit.h) + " m";
+      roLL.textContent = fmtLat(hit.lat) + " " + fmtLon(hit.lon);
+    } else {
+      roH.textContent = "—";
+      roLL.textContent = "移动鼠标查看";
+    }
+  });
+  function endPointer(e) {
+    pointers.delete(e.pointerId);
+    if (pointers.size === 0) { dragging = false; panning = false; CV.classList.remove("dragging"); }
+    if (pointers.size < 2) pinchStart = 0;
+  }
+  CV.addEventListener("pointerup", endPointer);
+  CV.addEventListener("pointercancel", endPointer);
+  CV.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  CV.addEventListener("wheel", function (e) {
+    e.preventDefault(); TOUCHED = true;
+    stopAnim();
+    cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.0011), 120, 9000);
+    draw();
+  }, { passive: false });
+
+  function pan(dx, dy) {
+    // 1:1 跟手平移：屏幕像素 → 地面公里
+    var mpp = 2 * cam.dist * Math.tan(FOVY * Math.PI / 360) / cssH;
+    var se = Math.max(0.3, Math.sin(cam.el * Math.PI / 180));
+    var sa = Math.sin(cam.az * Math.PI / 180), ca = Math.cos(cam.az * Math.PI / 180);
+    var rx = ca, rz = -sa;          // 屏幕向右对应的世界方向
+    var fx = -sa, fz = -ca;         // 屏幕向前（远）对应的世界方向
+    cam.tx += (-rx * dx + fx * dy / se) * mpp;
+    cam.tz += (-rz * dx + fz * dy / se) * mpp;
+    cam.tx = clamp(cam.tx, -1200, WKM + 1200);
+    cam.tz = clamp(cam.tz, -1200, DKM + 1200);
+  }
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function fmtLat(v) { return (v >= 0 ? "N" : "S") + Math.abs(v).toFixed(2) + "°"; }
+  function fmtLon(v) { return (v >= 0 ? "E" : "W") + Math.abs(v).toFixed(2) + "°"; }
+
+  /* ---------------------------------------------------------------- 相机动画 */
+  var anim = null;
+  function stopAnim() { anim = null; }
+  function flyTo(lon, lat, dist, az, el) {
+    var w = toWorld(lon, lat);
+    var to = {
+      tx: w[0], ty: sampleH(lon, lat) / 1000 * VEX, tz: w[2],
+      dist: dist != null ? dist : cam.dist,
+      az: az != null ? az : cam.az,
+      el: el != null ? el : cam.el
+    };
+    anim = { from: { tx: cam.tx, ty: cam.ty, tz: cam.tz, dist: cam.dist, az: cam.az, el: cam.el }, to: to, dur: 750 };
+    requestAnimationFrame(tick);
+  }
+  function fitView(az, el, instant) {
+    updateMatrices();
+    var corners = [
+      [0, 0, 0], [WKM, 0, 0], [0, 0, DKM], [WKM, 0, DKM],
+      [0, MAXH / 1000 * VEX, 0], [WKM, MAXH / 1000 * VEX, 0],
+      [0, MAXH / 1000 * VEX, DKM], [WKM, MAXH / 1000 * VEX, DKM]
+    ];
+    var target = [WKM / 2, MAXH / 2000 * VEX, DKM / 2];
+    var d = 1500, lastMax = 0;
+    for (var iter = 0; iter < 12; iter++) {
+      var ce = Math.cos(el * Math.PI / 180), se = Math.sin(el * Math.PI / 180);
+      var ca = Math.cos(az * Math.PI / 180), sa = Math.sin(az * Math.PI / 180);
+      var eye = [target[0] + d * sa * ce, target[1] + d * se, target[2] + d * ca * ce];
+      perspective(PROJ, FOVY * Math.PI / 180, CV.width / Math.max(1, CV.height), d * 0.02, d * 4 + 12000);
+      lookAt(VIEW, eye, target, [0, 1, 0]);
+      mul(VP, PROJ, VIEW);
+      var maxAbs = 0;
+      for (var i = 0; i < corners.length; i++) {
+        var p = project(corners[i][0], corners[i][1], corners[i][2]);
+        if (!p) { maxAbs = 2; break; }
+        maxAbs = Math.max(maxAbs, Math.abs(p[0] / cssW * 2 - 1), Math.abs(p[1] / cssH * 2 - 1));
+      }
+      lastMax = maxAbs;
+      if (maxAbs < 1e-4) break;
+      var f = maxAbs / 0.94;
+      d *= f;
+      if (Math.abs(f - 1) < 0.01) break;
+    }
+    cam.az = az; cam.el = el; cam.dist = d;
+    cam.tx = target[0]; cam.ty = target[1]; cam.tz = target[2];
+    window.__probe = "d=" + Math.round(d) + " max=" + lastMax.toFixed(3) + " css=" + cssW + "x" + cssH;
+    if (!instant) { anim = null; }
+    draw();
+  }
+
+  function tick(ts) {
+    if (!anim) return;
+    var a = anim;
+    if (!a.start) a.start = ts;
+    var t = Math.min(1, (ts - a.start) / a.dur);
+    var e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    cam.tx = a.from.tx + (a.to.tx - a.from.tx) * e;
+    cam.ty = a.from.ty + (a.to.ty - a.from.ty) * e;
+    cam.tz = a.from.tz + (a.to.tz - a.from.tz) * e;
+    cam.dist = a.from.dist + (a.to.dist - a.from.dist) * e;
+    cam.az = a.from.az + (a.to.az - a.from.az) * e;
+    cam.el = a.from.el + (a.to.el - a.from.el) * e;
+    draw();
+    if (t < 1) requestAnimationFrame(tick); else anim = null;
+  }
+
+  /* ---------------------------------------------------------------- 标签 */
+  var PLACES = [];
+  var labels = [];
+  function buildLabels() {
+    PLACES = LABELS[D.id] || [];
+    var host = document.getElementById("labels");
+    var tip = document.getElementById("tip");
+    PLACES.forEach(function (pl) {
+      var el = document.createElement("div");
+      el.className = "lb lb-" + pl.k + " d0";
+      var mk = document.createElement("i"); mk.className = "mk";
+      el.appendChild(mk);
+      var t = document.createElement("span"); t.textContent = pl.n;
+      el.appendChild(t);
+      if (pl.s) { var s = document.createElement("small"); s.textContent = pl.s; el.appendChild(s); }
+      var w = toWorld(pl.lon, pl.lat);
+      var item = { el: el, pl: pl, x: w[0], z: w[2], y: sampleH(pl.lon, pl.lat) / 1000, shown: false, w: 0 };
+      el.addEventListener("mouseenter", function () {
+        tip.innerHTML = "";
+        var b = document.createElement("b");
+        b.textContent = pl.n + (pl.s ? "（" + pl.s + "）" : "");
+        tip.appendChild(b);
+        tip.appendChild(document.createTextNode(pl.d || ""));
+        tip.classList.add("on");
+        var r = el.getBoundingClientRect();
+        tip.style.left = Math.round(r.left + r.width / 2) + "px";
+        tip.style.top = Math.round(r.top - 6) + "px";
+      });
+      el.addEventListener("mouseleave", function () { tip.classList.remove("on"); });
+      el.addEventListener("click", function () { flyTo(pl.lon, pl.lat, Math.min(cam.dist, 520)); });
+      host.appendChild(el);
+      labels.push(item);
+    });
+    var rank = { city: 0, pass: 1, lake: 1, mtn: 2, river: 2 };
+    labels.sort(function (a, b) { return (a.pl.p * 10 + rank[a.pl.k]) - (b.pl.p * 10 + rank[b.pl.k]); });
+  }
+
+  function labelVisible(pl, dist) {
+    if ((pl.k === "city" || pl.k === "mtn" || pl.k === "river" || pl.k === "lake") && !OPTS.places) return false;
+    if (pl.k === "pass" && !OPTS.passes) return false;
+    if (pl.p === 3 && dist > 2400) return false;
+    if (pl.p === 2 && dist > 5200) return false;
+    return true;
+  }
+
+  var OFFS = [[0, 0], [0, -16], [0, 16], [34, -10], [-34, -10], [34, 12], [-34, 12], [0, -32]];
+  var boxes = [];
+  function layoutLabels() {
+    boxes.length = 0;
+    var W = cssW, H = cssH;
+    for (var i = 0; i < labels.length; i++) {
+      var it = labels[i], pl = it.pl;
+      if (!labelVisible(pl, cam.dist)) { if (it.shown) { it.el.classList.add("d0"); it.shown = false; } continue; }
+      var clip = project(it.x, it.y * VEX, it.z);
+      if (!clip || clip[2] < -1 || clip[2] > 1) { if (it.shown) { it.el.classList.add("d0"); it.shown = false; } continue; }
+      var sx = clip[0], sy = clip[1];
+      if (sx < -80 || sx > W + 80 || sy < -40 || sy > H + 40) { if (it.shown) { it.el.classList.add("d0"); it.shown = false; } continue; }
+      if (!it.w) it.w = it.el.offsetWidth || Math.max(30, pl.n.length * 14);
+      var bw = it.w + 6, bh = 19;
+      var px = sx, py = sy, found = false;
+      for (var o = 0; o < OFFS.length; o++) {
+        var tx2 = sx + OFFS[o][0], ty2 = sy + OFFS[o][1];
+        var bx = tx2 - bw / 2, by = ty2 - bh / 2;
+        var hit = false;
+        for (var b = 0; b < boxes.length; b += 4) {
+          if (bx < boxes[b + 2] && bx + bw > boxes[b] && by < boxes[b + 3] && by + bh > boxes[b + 1]) { hit = true; break; }
+        }
+        if (!hit) { px = tx2; py = ty2; boxes.push(bx, by, bx + bw, by + bh); found = true; break; }
+      }
+      if (!found) { if (it.shown) { it.el.classList.add("d0"); it.shown = false; } continue; }
+      it.el.style.transform = "translate3d(" + px.toFixed(1) + "px," + py.toFixed(1) + "px,0) translate(-50%,-50%)";
+      if (!it.shown) { it.el.classList.remove("d0"); it.shown = true; }
+    }
+  }
+
+  function project(x, y, z) {
+    var m = VP;
+    var cx = m[0] * x + m[4] * y + m[8] * z + m[12];
+    var cy = m[1] * x + m[5] * y + m[9] * z + m[13];
+    var cw = m[3] * x + m[7] * y + m[11] * z + m[15];
+    if (cw <= 0.001) return null;
+    return [(cx / cw * 0.5 + 0.5) * cssW, (0.5 - cy / cw * 0.5) * cssH, cx / cw];
+  }
+
+  /* ---------------------------------------------------------------- 绘制 */
+  var PAPER = [0.949, 0.929, 0.886];
+
+  function draw() {
+    updateMatrices();
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.enable(gl.BLEND);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+    if (shadowVAO && !qs.has("noshadow")) {
+      gl.useProgram(pShadow);
+      gl.depthMask(false);
+      gl.uniformMatrix4fv(uShadowP.uVP, false, VP);
+      gl.uniform3f(uShadowP.uOrigin, -0.055 * WKM, -0.09 * MAXH / 1000 * VEX - 0.4, -0.015 * DKM);
+      gl.uniform2f(uShadowP.uSize, 1.16 * WKM, 1.16 * DKM);
+      gl.bindVertexArray(shadowVAO);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      gl.depthMask(true);
+    }
+
+    gl.useProgram(pTerrain);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, gTex);
+    gl.uniform1i(uTerrain.uH, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, texLUT);
+    gl.uniform1i(uTerrain.uLUT, 1);
+    gl.uniformMatrix4fv(uTerrain.uVP, false, VP);
+    gl.uniform2f(uTerrain.uRes, NW, NH);
+    gl.uniform1f(uTerrain.uMaxH, MAXH);
+    gl.uniform1f(uTerrain.uGamma, GAMMA);
+    gl.uniform1f(uTerrain.uLutMax, LUTMAX);
+    gl.uniform1f(uTerrain.uVex, VEX);
+    gl.uniform1f(uTerrain.uWKM, WKM);
+    gl.uniform1f(uTerrain.uDKM, DKM);
+    gl.uniform1f(uTerrain.uHaze, 0.22 / (WKM * 1.5));
+    gl.uniform3f(uTerrain.uSun, SUNX, SUNY, SUNZ);
+    gl.uniform3fv(uTerrain.uEye, EYE);
+    gl.uniform3fv(uTerrain.uBg, PAPER);
+    gl.bindVertexArray(terrain.vao);
+    gl.drawElements(gl.TRIANGLES, terrain.count, gl.UNSIGNED_INT, 0);
+
+    if (sideVAO) {
+      gl.useProgram(pSide);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texLUT);
+      gl.uniform1i(uSide.uLUT, 0);
+      gl.uniformMatrix4fv(uSide.uVP, false, VP);
+      gl.uniform1f(uSide.uVex, VEX);
+      gl.uniform1f(uSide.uLutMax, LUTMAX);
+      gl.uniform1f(uSide.uBase, -0.09 * MAXH / 1000 * VEX);
+      gl.bindVertexArray(sideVAO);
+      gl.drawArrays(gl.TRIANGLES, 0, sideCount);
+    }
+
+    drawLines(riverBatches, OPTS.rivers);
+    if (boundBatch) drawLines([boundBatch], OPTS.bounds);
+
+    if (lakeVao) {
+      gl.useProgram(pFlat);
+      gl.uniformMatrix4fv(uFlat.uVP, false, VP);
+      gl.uniform1f(uFlat.uVex, VEX);
+      gl.uniform1f(uFlat.uClear, 0.02);
+      gl.uniform4f(uFlat.uColor, 0.40, 0.53, 0.62, 0.92);
+      gl.bindVertexArray(lakeVao);
+      gl.drawArrays(gl.TRIANGLES, 0, lakeCount);
+    }
+    gl.bindVertexArray(null);
+    gl.disable(gl.DEPTH_TEST);
+
+    layoutLabels();
+    updateHUD();
+  }
+
+  function drawLines(batches, on) {
+    if (!on || !batches.length) return;
+    gl.useProgram(pLine);
+    gl.uniformMatrix4fv(uLine.uVP, false, VP);
+    gl.uniform2f(uLine.uViewport, CV.width, CV.height);
+    gl.uniform1f(uLine.uVex, VEX);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthMask(false);
+    for (var i = 0; i < batches.length; i++) {
+      var b = batches[i];
+      gl.uniform1f(uLine.uWidth, b.width * dpr);
+      gl.uniform1f(uLine.uClear, b.clear);
+      gl.uniform4fv(uLine.uColor, new Float32Array(b.color));
+      gl.bindVertexArray(b.vao);
+      gl.drawArrays(gl.TRIANGLES, 0, b.count);
+    }
+    gl.depthMask(true);
+  }
+
+  /* ---------------------------------------------------------------- 地名 */
+  var LABELS = {
+  "huaxia": [
+    /* ---------- 都城与重镇 ---------- */
+    { k: "city", n: "长安", s: "西安", lon: 108.94, lat: 34.34, p: 1, d: "周秦汉唐都城，关中平原的中心。" },
+    { k: "city", n: "洛阳", s: "", lon: 112.45, lat: 34.62, p: 1, d: "河洛之间，东周、东汉、北魏、隋唐东都。" },
+    { k: "city", n: "开封", s: "大梁", lon: 114.31, lat: 34.80, p: 1, d: "战国魏都，北宋东京，平原四战之地。" },
+    { k: "city", n: "北京", s: "蓟·幽州", lon: 116.40, lat: 39.90, p: 1, d: "燕国蓟城，辽金元明清都城。" },
+    { k: "city", n: "南京", s: "建康", lon: 118.80, lat: 32.06, p: 1, d: "六朝古都，钟山龙盘、石头虎踞。" },
+    { k: "city", n: "杭州", s: "临安", lon: 120.16, lat: 30.27, p: 1, d: "南宋都城，钱塘江畔、西湖之滨。" },
+    { k: "city", n: "成都", s: "益州", lon: 104.07, lat: 30.66, p: 1, d: "天府之国的中心，成都平原的都会。" },
+    { k: "city", n: "广州", s: "番禺", lon: 113.26, lat: 23.13, p: 1, d: "岭南都会，南海贸易的门户。" },
+    { k: "city", n: "太原", s: "晋阳", lon: 112.55, lat: 37.87, p: 1, d: "汾河谷地北端，表里山河，北朝霸府。" },
+    { k: "city", n: "武汉", s: "江夏", lon: 114.30, lat: 30.59, p: 1, d: "长江与汉水交汇，九省通衢。" },
+    { k: "city", n: "襄阳", s: "", lon: 112.14, lat: 32.04, p: 1, d: "汉水之滨，南北对峙的焦点。" },
+    { k: "city", n: "荆州", s: "江陵", lon: 112.24, lat: 30.33, p: 1, d: "长江中游的枢纽，荆楚腹心。" },
+    { k: "city", n: "扬州", s: "广陵", lon: 119.42, lat: 32.39, p: 1, d: "运河与长江交汇，唐宋最繁华的都会。" },
+    { k: "city", n: "昆明", s: "", lon: 102.83, lat: 24.88, p: 1, d: "滇池之滨，云贵高原的中心。" },
+    { k: "city", n: "济南", s: "历城", lon: 117.00, lat: 36.65, p: 2, d: "泰山北麓，济水之南。" },
+    { k: "city", n: "临淄", s: "", lon: 118.31, lat: 36.86, p: 2, d: "齐国都城，春秋五霸之首。" },
+    { k: "city", n: "郑州", s: "管城", lon: 113.63, lat: 34.75, p: 2, d: "中原枢纽，东接开封、西连洛阳。" },
+    { k: "city", n: "安阳", s: "殷墟", lon: 114.39, lat: 36.10, p: 2, d: "商代晚期都城，洹水之滨。" },
+    { k: "city", n: "邺城", s: "", lon: 114.55, lat: 36.32, p: 2, d: "曹魏、东魏北齐都城，漳水之畔。" },
+    { k: "city", n: "邯郸", s: "", lon: 114.54, lat: 36.63, p: 2, d: "赵国都城，太行东麓。" },
+    { k: "city", n: "大同", s: "平城", lon: 113.30, lat: 40.09, p: 2, d: "北魏都城，控扼塞北。" },
+    { k: "city", n: "南阳", s: "宛", lon: 112.53, lat: 32.99, p: 2, d: "南阳盆地，北通中原、南下荆襄。" },
+    { k: "city", n: "汉中", s: "南郑", lon: 107.03, lat: 33.07, p: 2, d: "秦岭与大巴山之间，蜀道的北口。" },
+    { k: "city", n: "天水", s: "上邽", lon: 105.72, lat: 34.58, p: 2, d: "陇右门户，关中往河西的必经。" },
+    { k: "city", n: "兰州", s: "金城", lon: 103.83, lat: 36.06, p: 2, d: "黄河穿城，河西与陇右的衔接点。" },
+    { k: "city", n: "长沙", s: "湘州", lon: 112.94, lat: 28.23, p: 2, d: "湘江之滨，荆楚南缘的重镇。" },
+    { k: "city", n: "南昌", s: "豫章", lon: 115.89, lat: 28.68, p: 2, d: "赣江下游，鄱阳湖平原的中心。" },
+    { k: "city", n: "合肥", s: "庐州", lon: 117.28, lat: 31.86, p: 2, d: "江淮之间的枢纽。" },
+    { k: "city", n: "寿春", s: "寿阳", lon: 116.78, lat: 32.58, p: 2, d: "淮河上游重镇，淝水之战的战场。" },
+    { k: "city", n: "九江", s: "浔阳", lon: 116.00, lat: 29.71, p: 2, d: "长江与鄱阳湖交汇，江防要地。" },
+    { k: "city", n: "福州", s: "三山", lon: 119.30, lat: 26.08, p: 2, d: "闽江下游，闽中都会。" },
+    { k: "city", n: "泉州", s: "刺桐", lon: 118.68, lat: 24.87, p: 2, d: "宋元海上丝路的起点。" },
+    { k: "city", n: "桂林", s: "始安", lon: 110.29, lat: 25.27, p: 2, d: "湘桂走廊南端，岭南的北门。" },
+    { k: "city", n: "贵阳", s: "", lon: 106.63, lat: 26.65, p: 2, d: "云贵高原东部，黔中重镇。" },
+    { k: "city", n: "大理", s: "", lon: 100.16, lat: 25.61, p: 2, d: "洱海之滨，南诏与大理国的都城。" },
+    { k: "city", n: "重庆", s: "渝州", lon: 106.55, lat: 29.56, p: 2, d: "嘉陵江与长江交汇，山城。" },
+    { k: "city", n: "苏州", s: "吴", lon: 120.62, lat: 31.30, p: 2, d: "春秋吴国都城，水网财赋之地。" },
+    { k: "city", n: "宁波", s: "明州", lon: 121.55, lat: 29.87, p: 2, d: "浙东门户，海上丝路起点之一。" },
+    { k: "city", n: "徐州", s: "彭城", lon: 117.18, lat: 34.26, p: 2, d: "南北要冲，淮北门户。" },
+    { k: "city", n: "许昌", s: "许都", lon: 113.85, lat: 34.04, p: 3, d: "曹操挟天子以令诸侯之地。" },
+    { k: "city", n: "商丘", s: "睢阳", lon: 115.65, lat: 34.44, p: 3, d: "黄淮平原上的古城。" },
+    { k: "city", n: "淮安", s: "山阳", lon: 119.02, lat: 33.50, p: 3, d: "淮河与运河交会，漕运咽喉。" },
+    { k: "city", n: "镇江", s: "京口", lon: 119.45, lat: 32.20, p: 3, d: "长江南岸，与瓜洲对渡。" },
+    { k: "city", n: "绍兴", s: "会稽", lon: 120.58, lat: 30.00, p: 3, d: "越国故都，山会平原。" },
+    { k: "city", n: "安庆", s: "舒州", lon: 117.05, lat: 30.53, p: 3, d: "长江北岸，控扼皖口。" },
+    { k: "city", n: "赣州", s: "虔州", lon: 114.94, lat: 25.83, p: 3, d: "赣江上游，岭南与中原之间的中转。" },
+    { k: "city", n: "韶关", s: "曲江", lon: 113.60, lat: 24.81, p: 3, d: "大庾岭北麓，岭南门户。" },
+    { k: "city", n: "潮州", s: "", lon: 116.62, lat: 23.66, p: 3, d: "韩江下游，闽粤之间的通商口。" },
+    { k: "city", n: "厦门", s: "嘉禾", lon: 118.09, lat: 24.48, p: 3, d: "九龙江口，海防要地。" },
+    { k: "city", n: "温州", s: "永嘉", lon: 120.70, lat: 28.00, p: 3, d: "瓯江口，浙南都会。" },
+    { k: "city", n: "南宁", s: "邕州", lon: 108.37, lat: 22.82, p: 3, d: "郁江之滨，桂南中心。" },
+    { k: "city", n: "柳州", s: "", lon: 109.41, lat: 24.33, p: 3, d: "柳江之滨，桂中重镇。" },
+    { k: "city", n: "遵义", s: "播州", lon: 106.93, lat: 27.73, p: 3, d: "黔北要冲，娄山关在其北。" },
+    { k: "city", n: "延安", s: "", lon: 109.49, lat: 36.60, p: 3, d: "陕北黄土丘陵，延河河谷。" },
+    { k: "city", n: "榆林", s: "", lon: 109.73, lat: 38.28, p: 3, d: "明代九边重镇，毛乌素沙地南缘。" },
+    { k: "city", n: "银川", s: "兴庆", lon: 106.23, lat: 38.49, p: 3, d: "贺兰山下，西夏都城。" },
+    { k: "city", n: "西宁", s: "湟中", lon: 101.78, lat: 36.62, p: 3, d: "湟水谷地，河湟的咽喉。" },
+    { k: "city", n: "武威", s: "凉州", lon: 102.64, lat: 37.93, p: 3, d: "河西走廊的东段重镇。" },
+    { k: "city", n: "张掖", s: "甘州", lon: 100.45, lat: 38.93, p: 3, d: "河西走廊中段，弱水之滨。" },
+    { k: "city", n: "呼和浩特", s: "归化", lon: 111.75, lat: 40.84, p: 3, d: "阴山南麓，漠南的中心。" },
+    { k: "city", n: "海口", s: "", lon: 110.20, lat: 20.04, p: 3, d: "琼州海峡南岸。" },
+    { k: "city", n: "曲阜", s: "", lon: 116.99, lat: 35.58, p: 3, d: "鲁国都城，孔子的故里。" },
+    /* ---------- 关隘与渡口 ---------- */
+    { k: "pass", n: "潼关", lon: 110.25, lat: 34.55, p: 1, d: "关中东部锁钥，黄河与秦岭之间最窄处。" },
+    { k: "pass", n: "函谷关", lon: 110.92, lat: 34.63, p: 1, d: "秦函谷关，崤函之固，一夫当关。" },
+    { k: "pass", n: "剑门关", lon: 105.55, lat: 32.20, p: 1, d: "蜀道天险，剑阁峥嵘而崔嵬。" },
+    { k: "pass", n: "武关", lon: 110.65, lat: 33.62, p: 2, d: "秦楚通道，出武关即入南阳盆地。" },
+    { k: "pass", n: "大散关", lon: 106.90, lat: 34.10, p: 2, d: "关中入蜀的北口。" },
+    { k: "pass", n: "阳平关", lon: 106.10, lat: 33.00, p: 2, d: "汉中西北门户，金牛道所经。" },
+    { k: "pass", n: "夔门", lon: 109.55, lat: 31.03, p: 2, d: "瞿塘峡口，长江出三峡的门户。" },
+    { k: "pass", n: "萧关", lon: 106.24, lat: 36.00, p: 3, d: "关中西北门户，六盘山东麓。" },
+    { k: "pass", n: "井陉关", lon: 114.20, lat: 38.05, p: 2, d: "太行八陉之第五陉，晋冀孔道。" },
+    { k: "pass", n: "壶关", lon: 113.20, lat: 36.11, p: 3, d: "上党东出太行之口。" },
+    { k: "pass", n: "天井关", lon: 112.90, lat: 35.35, p: 3, d: "太行南陉，晋城通中原之路。" },
+    { k: "pass", n: "虎牢关", lon: 113.20, lat: 34.85, p: 2, d: "洛阳东门户，成皋故地。" },
+    { k: "pass", n: "孟津", lon: 112.44, lat: 34.85, p: 3, d: "黄河古渡，武王伐纣会盟处。" },
+    { k: "pass", n: "龙门", lon: 110.58, lat: 35.66, p: 3, d: "黄河出晋陕峡谷之口，又称禹门口。" },
+    { k: "pass", n: "风陵渡", lon: 110.30, lat: 34.63, p: 3, d: "秦晋要津，黄河由北折东处。" },
+    { k: "pass", n: "娘子关", lon: 113.85, lat: 37.95, p: 3, d: "太行西口，扼井陉西端。" },
+    { k: "pass", n: "雁门关", lon: 112.85, lat: 39.20, p: 2, d: "太原北面门户，勾注山隘口。" },
+    { k: "pass", n: "居庸关", lon: 116.10, lat: 40.28, p: 2, d: "燕山关隘，北京西北屏障。" },
+    { k: "pass", n: "采石矶", lon: 118.47, lat: 31.65, p: 2, d: "长江渡口，南宋采石之战即在此。" },
+    { k: "pass", n: "瓜洲渡", lon: 119.42, lat: 32.25, p: 2, d: "运河入江之口，南北往来必由之路。" },
+    { k: "pass", n: "京口", lon: 119.47, lat: 32.21, p: 3, d: "北固山下，与瓜洲隔江相望。" },
+    { k: "pass", n: "濡须口", lon: 117.85, lat: 31.55, p: 3, d: "濡须水入江处，孙权筑坞拒曹。" },
+    { k: "pass", n: "白马津", lon: 114.55, lat: 35.55, p: 3, d: "黄河渡口，河北与中原之间。" },
+    { k: "pass", n: "梅关", lon: 114.34, lat: 25.30, p: 2, d: "大庾岭隘口，赣粤之间的古道。" },
+    { k: "pass", n: "仙霞关", lon: 118.50, lat: 28.30, p: 3, d: "浙闽之间的古道关隘。" },
+    { k: "pass", n: "娄山关", lon: 106.83, lat: 27.95, p: 3, d: "大娄山隘口，黔北门户。" },
+    { k: "pass", n: "镇南关", lon: 106.72, lat: 22.03, p: 3, d: "桂南边关，南疆门户。" },
+    /* ---------- 山脉 ---------- */
+    { k: "mtn", n: "秦岭", lon: 107.90, lat: 33.72, p: 1, d: "中国南北地理分界，关中的巨大屏障。" },
+    { k: "mtn", n: "太行山", lon: 113.30, lat: 37.55, p: 1, d: "山西高原与华北平原的界线，八陉横穿。" },
+    { k: "mtn", n: "大巴山", lon: 107.00, lat: 32.20, p: 2, d: "汉中与巴蜀之间的第二道屏障。" },
+    { k: "mtn", n: "巫山", lon: 110.00, lat: 31.10, p: 2, d: "长江三峡所在，川鄂之间的门户。" },
+    { k: "mtn", n: "雪峰山", lon: 110.50, lat: 27.50, p: 2, d: "湘西山地，沅江与资江的分水岭。" },
+    { k: "mtn", n: "武夷山", lon: 117.80, lat: 27.00, p: 2, d: "闽赣之间的界山。" },
+    { k: "mtn", n: "南岭", lon: 112.50, lat: 25.00, p: 2, d: "湘赣与两广之间的巨大屏障，五岭逶迤。" },
+    { k: "mtn", n: "罗霄山", lon: 114.00, lat: 26.50, p: 2, d: "湘赣界山，井冈山在其北段。" },
+    { k: "mtn", n: "大别山", lon: 116.20, lat: 31.20, p: 2, d: "淮河与长江的分水岭。" },
+    { k: "mtn", n: "天目山", lon: 119.45, lat: 30.35, p: 2, d: "浙西山地，太湖南面的屏障。" },
+    { k: "mtn", n: "黄山", lon: 118.17, lat: 30.13, p: 2, d: "皖南最高峰，海拔 1864 米。" },
+    { k: "mtn", n: "庐山", lon: 115.98, lat: 29.55, p: 2, d: "长江与鄱阳湖之间的孤山。" },
+    { k: "mtn", n: "衡山", lon: 112.60, lat: 27.20, p: 2, d: "南岳，湘江之滨。" },
+    { k: "mtn", n: "泰山", lon: 117.10, lat: 36.25, p: 2, d: "五岳之尊，齐鲁平原上的孤峰。" },
+    { k: "mtn", n: "嵩山", lon: 113.03, lat: 34.50, p: 2, d: "中岳，洛阳东南屏障。" },
+    { k: "mtn", n: "华山", lon: 110.08, lat: 34.48, p: 2, d: "西岳，海拔 2155 米。" },
+    { k: "mtn", n: "太白山", lon: 107.77, lat: 33.95, p: 2, d: "秦岭主峰，海拔 3767 米。" },
+    { k: "mtn", n: "峨眉山", lon: 103.33, lat: 29.60, p: 2, d: "峨眉天下秀，海拔 3099 米。" },
+    { k: "mtn", n: "中条山", lon: 111.60, lat: 35.05, p: 3, d: "黄河北岸，隔河即潼关。" },
+    { k: "mtn", n: "吕梁山", lon: 111.30, lat: 37.40, p: 3, d: "山西西部脊梁，黄河东岸。" },
+    { k: "mtn", n: "五台山", lon: 113.55, lat: 39.05, p: 3, d: "佛教名山，海拔 3061 米。" },
+    { k: "mtn", n: "恒山", lon: 113.70, lat: 39.60, p: 3, d: "北岳，大同与忻定盆地之间。" },
+    { k: "mtn", n: "六盘山", lon: 106.20, lat: 35.60, p: 3, d: "陇山，关中西北的屏障。" },
+    { k: "mtn", n: "燕山", lon: 116.00, lat: 40.30, p: 3, d: "华北平原北缘，长城横贯其上。" },
+    { k: "mtn", n: "青城山", lon: 103.50, lat: 31.00, p: 3, d: "成都平原西北缘的道教名山。" },
+    { k: "mtn", n: "玉龙雪山", lon: 100.20, lat: 27.10, p: 3, d: "丽江以北，海拔 5596 米。" },
+    { k: "mtn", n: "苍山", lon: 100.10, lat: 25.70, p: 3, d: "大理洱海西侧的屏障。" },
+    { k: "mtn", n: "乌蒙山", lon: 104.50, lat: 26.80, p: 3, d: "云贵之间的高原山地。" },
+    { k: "mtn", n: "苗岭", lon: 107.50, lat: 26.30, p: 3, d: "黔中分水岭。" },
+    { k: "mtn", n: "五指山", lon: 109.60, lat: 18.90, p: 3, d: "海南岛中部的山地。" },
+    { k: "mtn", n: "雁荡山", lon: 121.00, lat: 28.40, p: 3, d: "浙东南的火山岩山地。" },
+    { k: "mtn", n: "会稽山", lon: 120.60, lat: 29.95, p: 3, d: "越地的镇山。" },
+    /* ---------- 水系 ---------- */
+    { k: "river", n: "黄河", lon: 110.72, lat: 35.20, p: 1, d: "自晋陕峡谷南下，潼关折东，华北的界河。" },
+    { k: "river", n: "长江", lon: 112.20, lat: 30.30, p: 1, d: "荆江段，南北对峙的天堑。" },
+    { k: "river", n: "长江", lon: 118.60, lat: 32.00, p: 1, d: "下游江面开阔，建康、京口倚为天险。" },
+    { k: "river", n: "渭河", lon: 108.30, lat: 34.40, p: 2, d: "关中平原的母亲河。" },
+    { k: "river", n: "汾河", lon: 111.90, lat: 37.15, p: 2, d: "纵贯山西的断陷盆地。" },
+    { k: "river", n: "汉江", lon: 111.00, lat: 32.90, p: 2, d: "汉水，荆襄的命脉。" },
+    { k: "river", n: "淮河", lon: 117.30, lat: 32.65, p: 2, d: "南宋与金的分界，守江必守淮。" },
+    { k: "river", n: "珠江", lon: 113.30, lat: 22.90, p: 2, d: "岭南的母亲河，三角洲水网密布。" },
+    { k: "river", n: "湘江", lon: 112.70, lat: 27.80, p: 2, d: "湖南的主要水道，北入洞庭。" },
+    { k: "river", n: "赣江", lon: 115.30, lat: 27.50, p: 2, d: "江西的主干，北入鄱阳湖。" },
+    { k: "river", n: "钱塘江", lon: 120.35, lat: 30.20, p: 2, d: "浙江下游，杭州湾的潮水由此而入。" },
+    { k: "river", n: "京杭运河", lon: 120.25, lat: 31.45, p: 2, d: "南北漕运干线，穿行于水网之间。" },
+    { k: "river", n: "岷江", lon: 103.80, lat: 29.50, p: 2, d: "都江堰以下，灌溉成都平原。" },
+    { k: "river", n: "洛河", lon: 112.02, lat: 34.36, p: 3, d: "洛水，流经洛阳。" },
+    { k: "river", n: "闽江", lon: 118.30, lat: 26.20, p: 3, d: "福建最大的河流。" },
+    { k: "river", n: "嘉陵江", lon: 106.30, lat: 30.20, p: 3, d: "在重庆注入长江。" },
+    { k: "river", n: "乌江", lon: 107.50, lat: 28.50, p: 3, d: "黔北的峡谷河流。" },
+    { k: "river", n: "沅江", lon: 110.50, lat: 28.50, p: 3, d: "湘西的大河，注入洞庭湖。" },
+    { k: "river", n: "金沙江", lon: 101.50, lat: 26.50, p: 3, d: "长江上游，川滇之间的峡谷。" },
+    { k: "river", n: "大渡河", lon: 102.50, lat: 29.50, p: 3, d: "岷江支流，穿行于横断山东缘。" },
+    { k: "river", n: "澜沧江", lon: 100.50, lat: 22.50, p: 3, d: "滇南大河，出境后为湄公河。" },
+    /* ---------- 湖泊 ---------- */
+    { k: "lake", n: "洞庭湖", lon: 112.90, lat: 29.30, p: 1, d: "湖南的巨浸，长江中游的调蓄。" },
+    { k: "lake", n: "鄱阳湖", lon: 116.30, lat: 29.10, p: 1, d: "江西的巨浸，中国最大的淡水湖。" },
+    { k: "lake", n: "太湖", lon: 120.20, lat: 31.20, p: 1, d: "三万六千顷，江南水网的中心。" },
+    { k: "lake", n: "巢湖", lon: 117.50, lat: 31.55, p: 3, d: "皖中大湖，濡须水由此入江。" },
+    { k: "lake", n: "洪泽湖", lon: 118.70, lat: 33.25, p: 3, d: "淮河下游的巨型湖泊。" },
+    { k: "lake", n: "滇池", lon: 102.70, lat: 24.80, p: 2, d: "昆明湖畔，云南的中心。" },
+    { k: "lake", n: "洱海", lon: 100.20, lat: 25.80, p: 3, d: "大理的湖泊，苍山之下。" },
+    { k: "lake", n: "青海湖", lon: 100.20, lat: 36.90, p: 3, d: "高原上的大湖，海拔 3200 米。" }
+  ]
+};
+  var VIEWDEF = {
+    "huaxia": [["all", "全览"], ["guanzhong", "关中"], ["zhongyuan", "中原"], ["jingxiang", "荆襄"],
+               ["jiangnan", "江南"], ["bashu", "巴蜀"], ["lingnan", "岭南"], ["top", "俯瞰"]]
+  };
+  var VIEWCAM = {
+    guanzhong: { lon: 108.9, lat: 34.4, dist: 700, az: 30, el: 34 },
+    zhongyuan: { lon: 113.5, lat: 34.7, dist: 760, az: 26, el: 33 },
+    jingxiang: { lon: 112.3, lat: 31.7, dist: 760, az: 18, el: 32 },
+    jiangnan: { lon: 119.6, lat: 31.4, dist: 680, az: 18, el: 32 },
+    bashu: { lon: 104.4, lat: 30.4, dist: 760, az: 350, el: 33 },
+    lingnan: { lon: 112.8, lat: 23.6, dist: 760, az: 8, el: 32 }
+  };
+
+  function applyView(v) {
+    if (v === "all") { fitView(AZ0, EL0); return; }
+    if (v === "top") {
+      flyTo(cam.tx / WKM * (B[2] - B[0]) + B[0], B[3] - cam.tz / DKM * (B[3] - B[1]), cam.dist, 0, 88);
+      return;
+    }
+    var c = VIEWCAM[v];
+    if (c) flyTo(c.lon, c.lat, c.dist, c.az, c.el);
+  }
+
+  (function buildViews() {
+    var host = document.getElementById("views");
+    var list = VIEWDEF[D.id] || [["all", "全览"], ["top", "俯瞰"]];
+    list.forEach(function (v) {
+      var b = document.createElement("button");
+      b.className = "chip";
+      b.textContent = v[1];
+      b.addEventListener("click", function () { TOUCHED = true; applyView(v[0]); });
+      host.appendChild(b);
+    });
+  })();
+  document.getElementById("btnReset").addEventListener("click", function () { fitView(AZ0, EL0); });
+
+  /* 方向复位：只把朝向摆正（正北朝上），位置与远近不变 */
+  function resetDir() {
+    var lon = B[0] + cam.tx / WKM * (B[2] - B[0]);
+    var lat = B[3] - cam.tz / DKM * (B[3] - B[1]);
+    TOUCHED = true;
+    flyTo(clamp(lon, B[0], B[2]), clamp(lat, B[1], B[3]), cam.dist, AZ0, EL0);
+  }
+  document.getElementById("btnDir").addEventListener("click", resetDir);
+  document.querySelector(".compass").addEventListener("click", resetDir);
+
+  /* 自由拖动开关 */
+  Array.prototype.forEach.call(document.querySelectorAll(".chip[data-m]"), function (btn) {
+    btn.addEventListener("click", function () {
+      DRAGMODE = !DRAGMODE;
+      btn.classList.toggle("on", DRAGMODE);
+      CV.style.cursor = DRAGMODE ? "move" : "grab";
+    });
+  });
+
+  document.getElementById("rVex").addEventListener("input", function (e) {
+    VEX = +e.target.value;
+    document.getElementById("outVex").textContent = (VEX % 1 ? VEX.toFixed(1) : VEX) + "×";
+    draw();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".chip[data-t]"), function (btn) {
+    btn.addEventListener("click", function () {
+      var k = btn.getAttribute("data-t");
+      OPTS[k] = !OPTS[k];
+      btn.classList.toggle("on", OPTS[k]);
+      draw();
+    });
+  });
+  var docEl = document.getElementById("doc");
+  document.getElementById("btnDoc").addEventListener("click", function () { docEl.classList.toggle("on"); });
+  document.getElementById("docClose").addEventListener("click", function () { docEl.classList.remove("on"); });
+
+  /* ---------------------------------------------------------------- 启动 */
+    resize();
+  loadHeight(D.height, function () {
+    bootMsg.textContent = "构建地形与河流…";
+    texLUT = buildLUT(LUTMAX);
+    uploadHeightTexture();
+    buildTerrain();
+    buildSides();
+    buildShadow();
+    buildOverlays();
+    buildLabels();
+    fitView(AZ0, EL0, true);
+    READY = true;
+    if (qs.get("view")) { TOUCHED = true; applyView(qs.get("view")); }
+    if (qs.has("doc")) docEl.classList.add("on");
+    setTimeout(function () { if (qs.has("probe")) document.title = "LATE dist=" + Math.round(cam.dist) + " az=" + cam.az + " el=" + cam.el + " css=" + cssW + "x" + cssH + " cvs=" + CV.width + "x" + CV.height + " iw=" + innerWidth + " ih=" + innerHeight + " | " + window.__probe; }, 1500);
+    window.__probe += " | iw=" + innerWidth + " ih=" + innerHeight + " dpr=" + devicePixelRatio + " cvs=" + CV.width + "x" + CV.height;
+    bootEl.classList.add("gone");
+    document.title = qs.has("probe") ? ("PROBE " + window.__probe) : ("中国地势 3D · " + D.name);
+    setTimeout(function () { document.getElementById("hint").classList.add("gone"); }, 7000);
+    // 空白处点击收起说明
+    CV.addEventListener("pointerdown", function () { docEl.classList.remove("on"); });
+  });
+  }
+
+  /* ---------------------------------------------------------------- 区域载入 */
+  var IDX = window.GEO3D_INDEX || [];
+  if (!IDX.length) { fail("缺少区域清单 data/regions.js。"); return; }
+  var want = qs.get("r");
+  var entry = null;
+  for (var ii = 0; ii < IDX.length; ii++) if (IDX[ii].id === want) entry = IDX[ii];
+  if (!entry) entry = IDX[0];
+  var rg = document.createElement("script");
+  rg.src = entry.file;
+  rg.onload = function () { startAll(entry.id); };
+  rg.onerror = function () { fail("区域数据载入失败：" + entry.file); };
+  document.head.appendChild(rg);
+
+  /* 区域切换器 */
+  var sel = document.getElementById("regSel");
+  if (IDX.length < 2) sel.style.display = "none";
+  IDX.forEach(function (it) {
+    var o = document.createElement("option");
+    o.value = it.id; o.textContent = it.name;
+    if (it.id === entry.id) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.addEventListener("change", function () {
+    location.search = "?r=" + encodeURIComponent(sel.value) + (qs.get("vex") ? "&vex=" + qs.get("vex") : "");
+  });
+})();
+</script>
+</body>
+</html>

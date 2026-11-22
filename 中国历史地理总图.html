@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>中国历史地理总图 · 平面</title>
+<meta name="description" content="全国平面总图：省界、主要河流与历代战争重镇。西部、北部只作方位参照，不设三维地形。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316181D'/%3E%3Cpath d='M14 72l22-30 16 20 14-26 20 36z' fill='%23F4F1E9'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#f4f0e6; --card:rgba(255,253,247,.88); --ink:#211d18; --muted:#7a7263;
+    --line:rgba(33,29,24,.12); --accent:#9a3b2e; --blue:#4f7793;
+    --serif:"Songti SC","Noto Serif CJK SC","Source Han Serif SC",STSong,SimSun,serif;
+    --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(120% 90% at 50% 20%,#fdfaf3 0%,#f4efe3 48%,#e9e1cf 100%);
+    color:var(--ink);font-family:var(--sans);overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #stage{position:fixed;inset:0;cursor:grab;touch-action:none}
+  #stage.drag{cursor:grabbing}
+  svg{display:block;width:100%;height:100%}
+  .prov{fill:#f6efe0;stroke:#cabfa8;stroke-width:.7;vector-effect:non-scaling-stroke}
+  .river{fill:none;stroke:var(--blue);stroke-opacity:.55;stroke-width:1.1;vector-effect:non-scaling-stroke}
+  .box{fill:rgba(154,59,46,.05);stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;cursor:pointer}
+  .box:hover{fill:rgba(154,59,46,.11)}
+  /* 文字标注层 */
+  #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+  .lb{position:absolute;left:0;top:0;white-space:nowrap;transform:translate(-50%,-50%);letter-spacing:.06em}
+  .lb.prov{font-family:var(--serif);font-size:11px;color:#a2967f;letter-spacing:.18em}
+  .lb.city{font-family:var(--serif);font-size:12.5px;color:#2b2620;font-weight:600;
+    text-shadow:0 0 2px #fbf7ec,0 0 4px rgba(251,247,236,.9)}
+  .lb.city i{display:inline-block;width:4px;height:4px;border-radius:50%;background:#2b2620;margin-right:4px;vertical-align:middle}
+  .lb.boxlb{font-size:11.5px;color:var(--accent);background:rgba(255,253,247,.9);border:1px solid rgba(154,59,46,.28);
+    padding:3px 8px;border-radius:8px;pointer-events:auto;cursor:pointer;transform:translate(0,-50%)}
+  /* 界面 */
+  .brand{position:fixed;left:26px;top:22px;pointer-events:none}
+  .brand .eyebrow{font-size:10px;letter-spacing:.34em;color:#a89a80;font-weight:600}
+  .brand h1{font-family:var(--serif);font-size:clamp(20px,2.3vw,28px);margin:8px 0 0;letter-spacing:.06em}
+  .brand p{margin:6px 0 0;font-size:12px;color:var(--muted);letter-spacing:.06em}
+  .tools{position:fixed;right:20px;top:20px;display:flex;gap:8px;z-index:5}
+  .btn{font:inherit;font-size:12.5px;color:var(--ink);padding:9px 14px;border-radius:11px;cursor:pointer;
+    background:var(--card);border:1px solid rgba(33,29,24,.1);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    text-decoration:none;transition:background .18s,border-color .18s,transform .18s}
+  .btn:hover{background:#fffdf7;border-color:rgba(33,29,24,.2);transform:translateY(-1px)}
+  .legend{position:fixed;left:26px;bottom:22px;font-size:11.5px;color:var(--muted);line-height:2.1;letter-spacing:.05em}
+  .legend .row{display:flex;align-items:center;gap:7px}
+  .legend .sw{width:22px;height:9px;border-radius:2px}
+  .legend .sw.a{background:#f6efe0;border:1px solid #cabfa8}
+  .legend .sw.b{background:rgba(154,59,46,.08);border:1px dashed var(--accent)}
+  .legend .sw.c{height:2px;background:var(--blue);opacity:.55;border:0}
+  .note{position:fixed;right:20px;bottom:20px;max-width:290px;font-size:10.5px;line-height:1.8;color:#9a9080;text-align:right}
+  @media (max-width:760px){
+    .brand{left:16px;top:14px}.brand p{display:none}
+    .tools{right:12px;top:12px}
+    .legend{left:16px;bottom:14px;font-size:10.5px}
+    .note{display:none}
+    .lb.city{font-size:11.5px}
+    .lb.prov{font-size:10px}
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <svg id="svg" preserveAspectRatio="xMidYMid meet">
+    <g id="map">
+      <g id="geop"></g>
+      <g id="rivp"></g>
+      <g id="boxp"></g>
+    </g>
+  </svg>
+</div>
+<div id="labels"></div>
+
+<div class="brand">
+  <div class="eyebrow">中国历史地理 · 总图</div>
+  <h1>全国平面总图</h1>
+  <p>省界 · 主要河流 · 历代重镇；虚线框内可进入三维地形</p>
+</div>
+
+<div class="tools">
+  <a class="btn" href="中国地势3D.html" id="to3d">三维地形</a>
+  <button class="btn" id="zin">放大</button>
+  <button class="btn" id="zout">缩小</button>
+  <button class="btn" id="zreset">复位</button>
+</div>
+
+<div class="legend">
+  <div class="row"><span class="sw a"></span>省级行政区（今界，仅方位参照）</div>
+  <div class="row"><span class="sw c"></span>主要河流</div>
+  <div class="row"><span class="sw b"></span>已有三维地形区域（点击进入）</div>
+</div>
+
+<div class="note">省界来自 DataV.GeoAtlas，河流来自 Natural Earth 10m。<br>本图仅用于历史地理学习，不作边界依据。</div>
+
+<script src="data/china-map.js"></script>
+<script>
+"use strict";
+(function () {
+  var M = window.CHINA_MAP;
+  if (!M) { document.body.innerHTML = "<p style='padding:40px'>地图数据未加载。</p>"; return; }
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("svg");
+  var map = document.getElementById("map");
+  var geop = document.getElementById("geop");
+  var rivp = document.getElementById("rivp");
+  var boxp = document.getElementById("boxp");
+  var labels = document.getElementById("labels");
+
+  svg.setAttribute("viewBox", "0 0 " + M.w + " " + M.h);
+
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  // 省界
+  M.provinces.forEach(function (p) {
+    el("path", { d: p.d, "class": "prov" }, geop);
+  });
+  // 河流
+  M.rivers.forEach(function (r) {
+    el("path", { d: r.d, "class": "river" }, rivp);
+  });
+  // 三维区域框
+  M.regions.forEach(function (r) {
+    var rect = el("rect", { x: r.x, y: r.y, width: r.w, height: r.h, "class": "box", rx: 4 }, boxp);
+    rect.addEventListener("click", function () { location.href = "中国地势3D.html?r=" + r.id; });
+  });
+
+  // 标签（HTML 覆盖层）
+  var items = [];
+  function addLabel(text, x, y, cls, onClick) {
+    var d = document.createElement("div");
+    d.className = "lb " + cls;
+    d.textContent = text;
+    if (cls === "city") {
+      var i = document.createElement("i");
+      d.insertBefore(i, d.firstChild);
+    }
+    if (onClick) d.addEventListener("click", onClick);
+    labels.appendChild(d);
+    items.push({ el: d, x: x, y: y, right: !!arguments[5] });
+  }
+  M.regions.forEach(function (r) {
+    addLabel(r.n + " →", r.x + 3, r.y - 6, "boxlb", function () { location.href = "中国地势3D.html?r=" + r.id; }, true);
+  });
+  M.cities.forEach(function (c) { addLabel(c.n, c.x, c.y, "city"); });
+  M.provinces.forEach(function (p) {
+    var c = provinceCenter(p.n);
+    if (c) addLabel(p.n.replace(/省|市|自治区|壮族|回族|维吾尔|特别行政区/g, ""), c[0], c[1], "prov");
+  });
+
+  // 省名位置：用简化路径的边界框中心近似（比质心稳）
+  function provinceCenter(name) {
+    var p = null;
+    for (var i = 0; i < M.provinces.length; i++) if (M.provinces[i].n === name) { p = M.provinces[i]; break; }
+    if (!p) return null;
+    var nums = p.d.match(/-?\d+(\.\d+)?/g);
+    if (!nums) return null;
+    var xs = [], ys = [];
+    for (var k = 0; k + 1 < nums.length; k += 2) { xs.push(+nums[k]); ys.push(+nums[k + 1]); }
+    var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+    var y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+    return [(x0 + x1) / 2, (y0 + y1) / 2];
+  }
+
+  /* ---------------- 平移缩放 ---------------- */
+  var view = { s: 1, tx: 0, ty: 0 };
+  var boxes = [];
+  function apply() {
+    map.setAttribute("transform", "translate(" + view.tx + "," + view.ty + ") scale(" + view.s + ")");
+    var r = svg.getBoundingClientRect();
+    var k = Math.min(r.width / M.w, r.height / M.h);
+    var ox = (r.width - M.w * k) / 2 + r.left;
+    var oy = (r.height - M.h * k) / 2 + r.top;
+    boxes.length = 0;
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var sx = (it.x * view.s + view.tx) * k + ox;
+      var sy = (it.y * view.s + view.ty) * k + oy;
+      if (sx < -80 || sy < -40 || sx > r.width + 80 || sy > r.height + 40) { it.el.style.display = "none"; continue; }
+      if (it.w === undefined) { it.w = it.el.offsetWidth || 30; it.h = it.el.offsetHeight || 14; }
+      var left = it.right ? sx : sx - it.w / 2;
+      var top = sy - it.h / 2;
+      var hit = false;
+      for (var b = 0; b < boxes.length; b += 4) {
+        if (left < boxes[b + 2] && left + it.w > boxes[b] && top < boxes[b + 3] && top + it.h > boxes[b + 1]) { hit = true; break; }
+      }
+      if (hit) { it.el.style.display = "none"; continue; }
+      boxes.push(left, top, left + it.w, top + it.h);
+      it.el.style.display = "";
+      it.el.style.transform = "translate3d(" + sx.toFixed(1) + "px," + sy.toFixed(1) + "px,0)" +
+        (it.right ? " translate(0,-50%)" : " translate(-50%,-50%)");
+    }
+  }
+
+  function zoomAt(cx, cy, factor) {
+    var r = svg.getBoundingClientRect();
+    var ns = Math.max(0.8, Math.min(9, view.s * factor));
+    if (ns === view.s) return;
+    // 以光标为不动点：屏幕 → viewBox 坐标
+    var k = Math.min(r.width / M.w, r.height / M.h);
+    var ox = (r.width - M.w * k) / 2 + r.left;
+    var oy = (r.height - M.h * k) / 2 + r.top;
+    var vx = ((cx - ox) / k - view.tx) / view.s;
+    var vy = ((cy - oy) / k - view.ty) / view.s;
+    view.s = ns;
+    view.tx = (cx - ox) / k - vx * ns;
+    view.ty = (cy - oy) / k - vy * ns;
+    apply();
+  }
+
+  var drag = null;
+  var stage = document.getElementById("stage");
+  stage.addEventListener("pointerdown", function (e) {
+    stage.setPointerCapture(e.pointerId);
+    drag = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty };
+    stage.classList.add("drag");
+  });
+  stage.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var r = svg.getBoundingClientRect();
+    var k = Math.min(r.width / M.w, r.height / M.h);
+    view.tx = drag.tx + (e.clientX - drag.x) / k;
+    view.ty = drag.ty + (e.clientY - drag.y) / k;
+    apply();
+  });
+  function endDrag() { drag = null; stage.classList.remove("drag"); }
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+  stage.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0015));
+  }, { passive: false });
+
+  document.getElementById("zin").addEventListener("click", function () {
+    var r = svg.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.35);
+  });
+  document.getElementById("zout").addEventListener("click", function () {
+    var r = svg.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1 / 1.35);
+  });
+  document.getElementById("zreset").addEventListener("click", function () {
+    view = { s: 1, tx: 0, ty: 0 }; apply();
+  });
+  window.addEventListener("resize", apply);
+  apply();
+})();
+</script>
+</body>
+</html>
