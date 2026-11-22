@@ -1,0 +1,6 @@
+# GitHub Pages (Jekyll) 构建配置
+# 仅供站点发布使用，不影响本地文件。
+exclude:
+  - AGENTS.md
+  - .dev
+  - README.md
