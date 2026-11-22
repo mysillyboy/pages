@@ -3,8 +3,14 @@
 本目录是 <https://github.com/mysillyboy/pages> 的本地克隆。站点通过 **GitHub Pages 从 `main` 分支根目录直接发布**，没有构建步骤、没有后端。
 
 - 线上首页：<https://mysillyboy.github.io/pages/>
-- 远程仓库：`origin` → `https://github.com/mysillyboy/pages.git`
+- 远程仓库：`origin` → `git@github.com:mysillyboy/pages.git`（SSH）
 - 发布分支：`main`
+
+## 运行环境
+
+- 本机同时装有 Windows PowerShell 5.1 与 PowerShell 7.7（`pwsh`）。`.dev/` 下的脚本一律按 5.1 语法编写，**两个版本都能运行**。
+- **在 DSH 会话里请用 `powershell`（5.1）执行脚本**：沙箱不允许创建命名管道，而 PowerShell 7 捕获原生命令输出正需要它，用 `pwsh` 跑会出现 `Access to the path '\\.\pipe\LOCAL\dotnet_...' is denied`。这是沙箱限制，不是脚本问题。
+- 推送走 SSH：`~/.ssh/config` 已把 `github.com` 转发到 `ssh.github.com:443`（绕开常被干扰的 443 HTTPS）；仓库的 `core.sshCommand` 指向 Windows 原生 OpenSSH，避免 Git 自带的 msys ssh 在沙箱里起不来。
 
 ## 铁律一：改任何文件之前，先确认本地与 GitHub 完全一致
 
