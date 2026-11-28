@@ -176,7 +176,12 @@ BASE = np.maximum(BASE, 0)
 
 shape = BASE.shape
 r1 = ridged(shape, 4, 3, 11)
-H = BASE + (r1 - 0.62) * 160.0 * sstep(100, 500, BASE) + (fbm(shape, 70, 2, 77) - 0.5) * 12.0
+r2 = ridged(shape, 7, 3, 71)
+r3 = ridged(shape, 22, 2, 91)
+H = (BASE + (r1 - 0.62) * 160.0 * sstep(100, 500, BASE)
+     + (r2 - 0.62) * 82.0 * sstep(150, 600, BASE)
+     + (r3 - 0.60) * 30.0 * sstep(100, 500, BASE)
+     + (fbm(shape, 70, 2, 77) - 0.5) * 12.0)
 H = np.maximum(H, 0)
 H = box_blur(H, 1, 2)
 
@@ -205,14 +210,21 @@ def carve(H, rivers, depth, width):
 H = carve(H, [r for r in RIVERS if r["w"] >= 1.4], 110.0, 2.4)
 H = box_blur(H, 1, 2)
 
-HS = box_blur(H, 7, 2)
-gy, gx = np.gradient(HS, KMY * 1000.0, KMX * 1000.0)
-GS = 4.6
-nrm = np.sqrt((gx * GS) ** 2 + (gy * GS) ** 2 + 1.0)
-az, alt = math.radians(315), math.radians(30)
+az, alt = math.radians(318), math.radians(26)
 Lx, Ly, Lz = math.cos(alt) * math.sin(az), -math.cos(alt) * math.cos(az), math.sin(alt)
-dot = np.clip((-gx * GS * Lx - gy * GS * Ly + Lz) / nrm, 0, 1)
-shade = 0.05 + 1.55 * dot ** 1.05
+
+
+def lam(h, gs):
+    hy, hx = np.gradient(h, KMY * 1000.0, KMX * 1000.0)
+    nn = np.sqrt((hx * gs) ** 2 + (hy * gs) ** 2 + 1.0)
+    d = np.clip((-hx * gs * Lx - hy * gs * Ly + Lz) / nn, 0, 1)
+    return d
+
+
+HS = box_blur(H, 6, 2)
+dot = 0.42 * lam(H, 3.2) + 0.58 * lam(HS, 5.0)
+shade = 0.09 + 1.34 * dot ** 1.02
+gy, gx = np.gradient(H, KMY * 1000.0, KMX * 1000.0)
 
 blur = box_blur(H, 10, 3)
 ao = np.clip(0.6 + 0.95 * sstep(-30, 180, H - blur), 0.6, 1.2)
@@ -270,12 +282,15 @@ def lerp(c0, c1, t):
     return np.array(c0, np.float32) * (1 - t) + np.array(c1, np.float32) * t
 
 
-veg = lerp((118, 156, 64), (22, 56, 32), sstep(30, 560, H))
-veg = veg * (0.88 + 0.24 * fbm(shape, 16, 3, 201)[..., None])
+veg = lerp((112, 142, 70), (34, 66, 40), sstep(30, 560, H))
+veg = veg * (0.95 + 0.10 * fbm(shape, 16, 3, 201)[..., None])
+veg = veg * (0.93 + 0.14 * fbm(shape, 90, 3, 202)[..., None])
+veg = veg * (0.94 + 0.12 * fbm(shape, 240, 2, 203)[..., None])
 aut = fbm(shape, 13, 4, 311) * 0.7 + fbm(shape, 44, 3, 407) * 0.3
-autumn = sstep(0.55, 0.68, aut) * sstep(50, 200, H) * (1 - sstep(1600, 2000, H))
-aco = lerp((208, 112, 30), (148, 40, 20), fbm(shape, 20, 3, 509))
-veg = veg * (1 - 0.85 * autumn[..., None]) + aco * (0.85 * autumn[..., None])
+autumn = sstep(0.50, 0.76, aut) * sstep(50, 200, H) * (1 - sstep(1600, 2000, H))
+aco = lerp((198, 118, 44), (152, 58, 30), fbm(shape, 20, 3, 509))
+aco = aco * (0.86 + 0.28 * fbm(shape, 130, 3, 511)[..., None])
+veg = veg * (1 - 0.62 * autumn[..., None]) + aco * (0.62 * autumn[..., None])
 
 rock = np.clip(sstep(0.85, 1.6, slope) * 0.7 + sstep(1400, 1800, H) * 0.9, 0, 1)
 rock = np.clip(rock * (0.5 + 0.8 * fbm(shape, 42, 3, 601)), 0, 1)
@@ -289,9 +304,9 @@ veg = veg * (1 - 0.92 * plain[..., None]) + fco * (0.92 * plain[..., None])
 b3 = box_blur(H, 4, 2)
 crest = np.clip((H - b3) / 50.0, 0, 1) ** 0.9
 valley = np.clip((b3 - H) / 40.0, 0, 1) ** 0.9
-lit = np.clip(shade * (1 - shadow * 0.85) * ao, 0.0, 1.7)
-lit = lit * (1.0 + 0.7 * crest - 0.5 * valley)
-rgb = veg * (0.06 + 1.55 * lit[..., None])
+lit = np.clip(shade * (1 - shadow * 0.88) * ao, 0.0, 1.55)
+lit = lit * (1.0 + 0.45 * crest - 0.40 * valley)
+rgb = veg * (0.12 + 1.15 * lit[..., None])
 warm = np.array([1.10, 1.03, 0.90], np.float32)
 cool = np.array([0.58, 0.68, 0.94], np.float32)
 rgb = rgb * (warm * (1 - shadow[..., None]) + cool * shadow[..., None])
@@ -323,7 +338,7 @@ KZ = 0.80
 VS = 0.115
 OW = NX * CW
 OY0 = 250
-SLAB = 8
+SLAB = 5
 yplane = OY0 + (np.arange(NY) + 0.5) * CH * KZ
 OH = int(yplane[-1] + SLAB + 26)
 out = np.zeros((OH, OW, 3), np.uint8)
@@ -345,7 +360,7 @@ for u in range(NX):
             a = int(max(0, math.floor(y))); b = int(min(OH, math.ceil(y + SLAB)))
             if b > a:
                 kk = np.linspace(0, 1, b - a)[:, None]
-                col = np.array([120, 106, 88], np.float32) * (1 - kk) + np.array([58, 48, 40], np.float32) * kk
+                col = np.array([86, 78, 62], np.float32) * (1 - kk) + np.array([40, 36, 32], np.float32) * kk
                 out[a:b, x0:x0 + CW] = col[:, None, :].astype(np.uint8)
                 alpha[a:b, x0:x0 + CW] = 255
                 ids[a:b, x0:x0 + CW] = j
@@ -379,6 +394,7 @@ ccols = np.broadcast_to((np.arange(OW) // CW)[None, :], (OH, OW))
 edgefade = np.where(ids >= 0, np.clip(1.0 - OUTD[np.clip(ids, 0, NY - 1), ccols] * 0.20, 0.28, 1.0), 0.0)
 alpha = (alpha.astype(np.float32) * edgefade).astype(np.uint8)
 terr = Image.fromarray(np.dstack([out, alpha])).convert("RGBA")
+terr = terr.filter(ImageFilter.GaussianBlur(0.7))
 d2 = ImageDraw.Draw(terr, "RGBA")
 
 
@@ -386,32 +402,8 @@ def screen_y(j, h):
     return yplane[j] - h * VS
 
 
-# 林木
-dens = np.clip(sstep(6, 90, H) * (1 - plain * 0.95) * (0.45 + 1.0 * fbm(shape, 21, 3, 1201)), 0, 1)
-dens = np.where(MASK, dens, 0)
-flat = dens.ravel()
-nclump = 42000
-idx = rng.choice(len(flat), size=nclump, replace=False, p=flat / flat.sum())
-jj = idx // NX; ii = idx % NX
-greens = np.array([(16, 40, 24), (24, 54, 28), (32, 66, 32), (42, 80, 36), (52, 92, 40)], np.int16)
-auts = np.array([(186, 84, 22), (156, 44, 16), (206, 130, 34), (170, 58, 18)], np.int16)
-for k in range(nclump):
-    j0, i0 = jj[k], ii[k]
-    aut_w = min(1.0, autumn[j0, i0] * 1.9)
-    cx = i0 * CW + rng.uniform(0, CW); cy = screen_y(j0, H[j0, i0])
-    f = 0.32 + 0.85 * min(1.8, shade[j0, i0]) * (1 - 0.55 * shadow[j0, i0])
-    for m in range(rng.integers(5, 14)):
-        x = cx + rng.normal(0, 5.0); y = cy + rng.normal(0, 3.2) - rng.uniform(0, 1.5)
-        yi, xi = int(y), int(x)
-        if yi < 0 or yi >= OH or xi < 0 or xi >= OW:
-            continue
-        if ids[yi, xi] < 0 or abs(ids[yi, xi] - j0) > 2:
-            continue
-        c = auts[rng.integers(0, 4)] if rng.random() < 0.07 + 0.7 * aut_w else greens[rng.integers(0, 5)]
-        c = np.clip(c * f, 0, 255)
-        r = rng.uniform(0.6, 1.4)
-        d2.ellipse([x - r, y - r, x + r, y + r], fill=(int(c[0]), int(c[1]), int(c[2]), 198))
-print("[trees] %.1fs" % (time.time() - t0))
+# 植被纹理：低频斑块，不再撒点
+print("[trees] skipped")
 
 
 # ---------------------------------------------------------------- 水系
@@ -503,11 +495,11 @@ scene.alpha_composite(terr)
 # 云带：仅在山体轮廓之外
 halo = am.filter(ImageFilter.GaussianBlur(30))
 ha = np.asarray(halo).astype(np.float32) / 255.0
-ha = np.clip((ha - 0.22) / 0.5, 0, 1) ** 1.2
+ha = np.clip((ha - 0.16) / 0.46, 0, 1) ** 1.1
 inside = np.asarray(am).astype(np.float32) / 255.0
 ha = ha * np.clip(1.0 - inside * 1.4, 0, 1)
 clouds = Image.new("RGBA", (OW, OH), (255, 255, 255, 0))
-clouds.putalpha(Image.fromarray((ha * 205).astype(np.uint8)))
+clouds.putalpha(Image.fromarray((ha * 238).astype(np.uint8)))
 scene.alpha_composite(clouds)
 
 # 额外的雾气团，贴边外扩
