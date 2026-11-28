@@ -35,19 +35,16 @@
 
 ```
 根目录/
-├─ index.html                站点首页（六个页面的入口卡片）
+├─ index.html                站点首页（五个页面的入口卡片）
 ├─ weread-dashboard.html     微信读书 · 阅读看板
 ├─ 国产汽车品牌关系图.html
 ├─ 中国历代王朝·幻灯片.html
 ├─ 中国地势3D.html            三维地势图（WebGL2，无第三方库）
 ├─ 中国历史地理总图.html       全国平面总图（SVG）
-├─ 江西山河图.html            江西地势图（由 .dev/jiangxi-art.py 生成 PNG）
 ├─ robots.txt
 ├─ _config.yml               Jekyll 配置：把开发文件排除出站点
 ├─ AGENTS.md                 给 AI 的强制规则（改前校验、改后发布）
 ├─ README.md                 本文件
-├─ assets/                   ← 生成的成图
-│  └─ jiangxi-shanhetu.png   江西山河图（1680×1922，由 jiangxi-art.py 生成）
 ├─ data/                     ← 数据层，全部由脚本生成，禁止手改
 │  ├─ regions.js             三维图区域清单（手写，新增区域在此登记）
 │  ├─ geo-huaxia.js          三维区域数据（terrarium 高程 + OSM 河流 + 省界）
@@ -59,8 +56,7 @@
    ├─ serve.mjs              preview 在没有 Python 时的兜底服务器
    ├─ wait-pages.mjs         publish 用来等待线上更新的辅助脚本
    ├─ geo-build.py           生成 data/geo-<id>.js
-   ├─ geo-china-map.py       生成 data/china-map.js
-   └─ jiangxi-art.py         生成 assets/jiangxi-shanhetu.png
+   └─ geo-china-map.py       生成 data/china-map.js
 ```
 
 `_config.yml` 已经把这些排除出站点，所以 `AGENTS.md`、`README.md`、`.dev/` **不会出现在线上网站**。
@@ -74,7 +70,6 @@
 | `data/geo-huaxia.js` | `.dev/geo-build.py` | 高程 Mapzen / AWS Terrain Tiles（SRTM）；河流 OpenStreetMap Overpass；省界 阿里云 DataV.GeoAtlas | CC-BY / ODbL / 仅方位参照 |
 | `data/china-map.js` | `.dev/geo-china-map.py` | 省界 DataV.GeoAtlas；河流 Natural Earth 10m | 仅方位参照 / 公有领域 |
 | `data/regions.js` | 手写 | — | — |
-| `assets/jiangxi-shanhetu.png` | `.dev/jiangxi-art.py` | 高程裁切自 `data/geo-huaxia.js`；省界 DataV.GeoAtlas；河流/湖泊手工编绘 | CC-BY / 仅方位参照 / 示意 |
 
 **两条铁律：**
 
