@@ -258,7 +258,7 @@ def poly_mask(nx, ny):
 
 CORE = poly_mask(NX, NY)
 MASK = CORE.copy()
-for _ in range(3):
+for _ in range(2):
     MASK = MASK | np.roll(MASK, 1, 0) | np.roll(MASK, -1, 0) | np.roll(MASK, 1, 1) | np.roll(MASK, -1, 1)
 
 # ---------------------------------------------------------------- 配色
@@ -320,9 +320,9 @@ tex_col = (tex_np[:, 0::2].astype(np.float32) + tex_np[:, 1::2].astype(np.float3
 # ---------------------------------------------------------------- 斜视投影
 CW, CH = 3, 3
 KZ = 0.80
-VS = 0.115
+VS = 0.052
 OW = NX * CW
-OY0 = 250
+OY0 = 210
 SLAB = 8
 yplane = OY0 + (np.arange(NY) + 0.5) * CH * KZ
 OH = int(yplane[-1] + SLAB + 26)
@@ -367,17 +367,6 @@ for u in range(NX):
         jprev = j
 
 print("[oblique] %.1fs  %dx%d" % (time.time() - t0, OW, OH))
-# 外缘 3 圈渐隐，让切边溶进云雾
-OUTD = np.zeros((NY, NX), np.float32)
-cur = MASK & ~CORE
-OUTD[cur] = 1
-for d in range(2, 4):
-    nxt = cur & np.roll(cur, 1, 0) & np.roll(cur, -1, 0) & np.roll(cur, 1, 1) & np.roll(cur, -1, 1) & ~CORE
-    OUTD[nxt] = d
-    cur = nxt
-ccols = np.broadcast_to((np.arange(OW) // CW)[None, :], (OH, OW))
-edgefade = np.where(ids >= 0, np.clip(1.0 - OUTD[np.clip(ids, 0, NY - 1), ccols] * 0.20, 0.28, 1.0), 0.0)
-alpha = (alpha.astype(np.float32) * edgefade).astype(np.uint8)
 terr = Image.fromarray(np.dstack([out, alpha])).convert("RGBA")
 d2 = ImageDraw.Draw(terr, "RGBA")
 
@@ -390,7 +379,7 @@ def screen_y(j, h):
 dens = np.clip(sstep(6, 90, H) * (1 - plain * 0.95) * (0.45 + 1.0 * fbm(shape, 21, 3, 1201)), 0, 1)
 dens = np.where(MASK, dens, 0)
 flat = dens.ravel()
-nclump = 42000
+nclump = 34000
 idx = rng.choice(len(flat), size=nclump, replace=False, p=flat / flat.sum())
 jj = idx // NX; ii = idx % NX
 greens = np.array([(16, 40, 24), (24, 54, 28), (32, 66, 32), (42, 80, 36), (52, 92, 40)], np.int16)
@@ -409,8 +398,8 @@ for k in range(nclump):
             continue
         c = auts[rng.integers(0, 4)] if rng.random() < 0.07 + 0.7 * aut_w else greens[rng.integers(0, 5)]
         c = np.clip(c * f, 0, 255)
-        r = rng.uniform(0.6, 1.4)
-        d2.ellipse([x - r, y - r, x + r, y + r], fill=(int(c[0]), int(c[1]), int(c[2]), 198))
+        r = rng.uniform(0.7, 1.6)
+        d2.ellipse([x - r, y - r, x + r, y + r], fill=(int(c[0]), int(c[1]), int(c[2]), 210))
 print("[trees] %.1fs" % (time.time() - t0))
 
 
@@ -507,7 +496,7 @@ ha = np.clip((ha - 0.22) / 0.5, 0, 1) ** 1.2
 inside = np.asarray(am).astype(np.float32) / 255.0
 ha = ha * np.clip(1.0 - inside * 1.4, 0, 1)
 clouds = Image.new("RGBA", (OW, OH), (255, 255, 255, 0))
-clouds.putalpha(Image.fromarray((ha * 205).astype(np.uint8)))
+clouds.putalpha(Image.fromarray((ha * 235).astype(np.uint8)))
 scene.alpha_composite(clouds)
 
 # 额外的雾气团，贴边外扩
@@ -576,29 +565,27 @@ def rot_text(img, xy, text, font, fill, stroke, sw, angle, gap=3):
 
 
 def pin(d, x, y, s=1.0):
-    r = 10 * s
+    r = 13 * s
     d.ellipse([x - r, y - 2.6 * r, x + r, y - 0.6 * r], fill=(34, 44, 58, 255))
     d.polygon([(x - r * 0.72, y - 1.35 * r), (x + r * 0.72, y - 1.35 * r), (x, y)], fill=(34, 44, 58, 255))
     d.ellipse([x - r * 0.42, y - 2.3 * r, x + r * 0.42, y - 1.45 * r], fill=(245, 248, 250, 255))
 
 
 def city(d, x, y, name, dx, dy, tag=None):
-    dx *= 0.78
-    dy *= 0.78
     pin(d, x, y)
-    size = 33
+    size = 46
     f = fnt(size)
     tw = d.textlength(name, font=f)
-    w = tw + 26
-    h = 44
+    w = tw + 40
+    h = 62
     bx = x + dx - w / 2
     by = y + dy - h / 2
     # 引线
-    if abs(dx) > 34 or abs(dy) > 34:
-        d.line([(x, y - 5), (bx + w / 2, by + h / 2)], fill=(60, 56, 50, 110), width=1)
-    d.rounded_rectangle([bx + 1, by + 3, bx + w + 1, by + h + 3], radius=10, fill=(60, 50, 40, 48))
-    d.rounded_rectangle([bx, by, bx + w, by + h], radius=10, fill=(255, 253, 250, 243),
-                        outline=(208, 200, 186, 255), width=1)
+    if abs(dx) > 40 or abs(dy) > 40:
+        d.line([(x, y - 6), (bx + w / 2, by + h / 2)], fill=(60, 56, 50, 120), width=2)
+    d.rounded_rectangle([bx + 2, by + 4, bx + w + 2, by + h + 4], radius=14, fill=(60, 50, 40, 55))
+    d.rounded_rectangle([bx, by, bx + w, by + h], radius=14, fill=(255, 253, 250, 246),
+                        outline=(206, 198, 184, 255), width=2)
     d.text((bx + w / 2, by + h / 2 + 1), name, font=f, fill=(190, 40, 32, 255), anchor="mm")
     return (bx, by, bx + w, by + h)
 
