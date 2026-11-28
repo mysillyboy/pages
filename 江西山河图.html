@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>江西 · 山河图</title>
+<meta name="description" content="一幅手绘风格的江西地势图：鄱阳湖平原居中，罗霄山、武夷山、南岭三面环抱，赣江自南向北贯流。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2316181D'/%3E%3Cpath d='M14 72l22-30 16 20 14-26 20 36z' fill='%23F4F1E9'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#f1ebdf; --ink:#211d18; --muted:#7a7263; --accent:#9a3b2e;
+    --serif:"Songti SC","Noto Serif CJK SC","Source Han Serif SC",STSong,SimSun,serif;
+    --sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:
+      radial-gradient(120% 80% at 50% 0%, #fdfaf4 0%, #f2ecdf 46%, #e6ddc9 100%) fixed;
+    color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;
+    min-height:100vh;display:flex;flex-direction:column;
+  }
+  .brand{position:fixed;left:26px;top:20px;z-index:3;pointer-events:none}
+  .brand .eyebrow{font-size:10px;letter-spacing:.34em;color:#a89a80;font-weight:600}
+  .brand h1{font-family:var(--serif);font-size:clamp(17px,2vw,23px);margin:6px 0 0;letter-spacing:.08em;font-weight:600}
+  .tools{position:fixed;right:20px;top:18px;display:flex;gap:8px;z-index:4}
+  .btn{font:inherit;font-size:12.5px;color:var(--ink);padding:9px 14px;border-radius:11px;cursor:pointer;
+    background:rgba(255,253,247,.86);border:1px solid rgba(33,29,24,.1);text-decoration:none;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    transition:background .18s,border-color .18s,transform .18s}
+  .btn:hover{background:#fffdf7;border-color:rgba(33,29,24,.22);transform:translateY(-1px)}
+
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:76px 22px 18px;min-height:0}
+  .plate{
+    position:relative;background:#fffdf7;padding:13px;border-radius:5px;display:inline-block;
+    box-shadow:0 34px 70px -34px rgba(48,36,22,.55), 0 2px 0 rgba(255,255,255,.7) inset,
+               0 0 0 1px rgba(70,58,40,.13);
+    max-width:min(96vw,760px);
+  }
+  .plate a{display:block;line-height:0}
+  .plate img{
+    display:block;max-width:100%;max-height:calc(100vh - 210px);width:auto;height:auto;
+    border-radius:2px;cursor:zoom-in;background:#f7f8f5;
+  }
+  .plate::after{
+    content:"点击可查看大图";position:absolute;right:22px;bottom:22px;
+    font-size:11px;letter-spacing:.08em;color:rgba(40,34,26,.55);
+    background:rgba(255,253,247,.82);padding:4px 9px;border-radius:7px;
+    opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  .plate:hover::after{opacity:1}
+
+  .note{
+    margin:0 auto;padding:0 26px 20px;max-width:860px;text-align:center;
+    font-size:10.5px;line-height:1.8;color:#9a9080;letter-spacing:.02em;
+  }
+  .note b{font-weight:600;color:#8b8172}
+  @media (max-width:820px){
+    .brand{left:16px;top:14px}
+    .brand .eyebrow{display:none}
+    .tools{right:12px;top:12px}
+    .btn{padding:8px 11px;font-size:12px}
+    .stage{padding:56px 10px 12px}
+    .plate{padding:8px;max-width:100%;width:100%}
+    .plate img{max-height:none;width:100%}
+    .note{padding:0 18px 18px;text-align:left}
+  }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <div class="eyebrow">JIANGXI · SHANHE TU</div>
+  <h1>江西 · 山河图</h1>
+</div>
+
+<div class="tools">
+  <a class="btn" href="assets/jiangxi-shanhetu.png" download>下载大图</a>
+  <a class="btn" href="index.html">← 首页</a>
+</div>
+
+<div class="stage">
+  <div class="plate">
+    <a href="assets/jiangxi-shanhetu.png" target="_blank" rel="noopener">
+      <img src="assets/jiangxi-shanhetu.png" width="1680" height="1922"
+           alt="江西山河图：鄱阳湖平原居中，罗霄山脉、武夷山脉、南岭环抱，赣江、抚河、信江、饶河、修河汇入鄱阳湖。">
+    </a>
+  </div>
+</div>
+
+<p class="note">
+  <b>读图</b>：江西三面环山、北向开口——东武夷、南南岭、西罗霄，中部为赣江纵谷与吉泰盆地，北端汇入鄱阳湖平原。
+  高程取自 SRTM，省界仅供方位参照，河流为示意性编绘，不作为边界依据。
+</p>
+
+</body>
+</html>
